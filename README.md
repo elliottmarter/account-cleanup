@@ -5,6 +5,7 @@
 > It has not been professionally reviewed or audited. You're free to use, copy and modify it,
 > but **entirely at your own risk**. It comes with no warranty and no support, and I accept no
 > responsibility for any data loss, security issues or other problems that result from using it.
+> Released under the [MIT License](LICENSE).
 
 A small self-hosted web app for working through your old online accounts and
 deleting the ones you no longer need — a little at a time.
