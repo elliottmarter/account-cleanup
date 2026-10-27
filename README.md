@@ -12,6 +12,8 @@ deleting the ones you no longer need — a little at a time.
 
 1. **Import** a Bitwarden export (`.json` or `.csv`; other password managers' CSVs work too).
    Only names, URLs, usernames, folders and dates are kept — passwords, 2FA seeds and notes are discarded.
+   **Recommended:** export as `.csv` and delete the password columns yourself before uploading
+   (see [Preparing your export](#preparing-your-export)).
 2. **Triage** (optional): rapid-fire Keep / Delete / Site gone, with keyboard shortcuts `K` `D` `G` `S`.
 3. **Today**: the app suggests one account per day (configurable). Accounts you queued for deletion
    come first, then unreviewed ones — oldest-touched first, since those are most likely forgotten.
@@ -77,9 +79,25 @@ Version tags such as `:1.0.0` are published for tagged releases, if you'd rather
 The app has no login by default. The tracker holds a list of your accounts and usernames, so set
 `APP_PASSWORD` (or keep the port on your LAN / behind a reverse proxy with auth) if anyone else can reach it.
 
+### Preparing your export
+
+The app ignores passwords, but you shouldn't have to take its word for it. **It's recommended to
+export as CSV and remove the passwords yourself, so none are ever uploaded to the app:**
+
+1. In Bitwarden choose **Tools → Export vault** and pick **`.csv`** (not `.json`).
+2. Open the file in Excel, LibreOffice Calc or a text editor and **delete the `login_password` and
+   `login_totp` columns**. You can also delete `notes` and `fields`, which may contain secrets too.
+   The app only needs `name`, `login_uri` and `login_username` (`folder` and `type` are optional).
+3. Save it, still as CSV, and upload that file.
+4. Afterwards, permanently delete both the original and the edited export (and empty the recycle bin).
+
+The same applies to other password managers' CSV exports: keep the name, URL and username
+columns and delete the rest.
+
 ### Security notes
 
-- Bitwarden's unencrypted export contains your passwords in plain text. Delete the file after importing.
+- Bitwarden's unencrypted export contains your passwords in plain text. Strip them as described
+  above, and delete the file after importing.
 - Uploads are parsed in memory; the raw file is never written to disk.
 
 ## Build from source
