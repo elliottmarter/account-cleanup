@@ -1,11 +1,14 @@
 services:
   account-cleanup:
-    build: .
+    image: ghcr.io/elliottmarter/account-cleanup:latest
+    # build: .                     # use this instead of image to build from source
     container_name: account-cleanup
     ports:
       - "8080:8080"
     environment:
       TZ: Europe/London            # decides when "today" rolls over
+      # PUID: 1000                 # user/group the app runs as and owns /data
+      # PGID: 1000
       # APP_USERNAME: admin        # optional login prompt - recommended if
       # APP_PASSWORD: change-me    # anyone else can reach this port
     volumes:

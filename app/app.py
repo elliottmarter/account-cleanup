@@ -82,7 +82,7 @@ def parse_dt(value):
 
 @app.before_request
 def require_auth():
-    if not APP_PASSWORD:
+    if not APP_PASSWORD or request.path == "/healthz":
         return None
     auth = request.authorization
     if (
@@ -229,6 +229,12 @@ def get_stats(conn):
 
 
 # --- pages -------------------------------------------------------------------
+
+@app.get("/healthz")
+def healthz():
+    db.get_db().execute("SELECT 1")
+    return "ok"
+
 
 @app.get("/")
 def today_page():

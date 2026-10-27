@@ -23,31 +23,47 @@ deleting the ones you no longer need — a little at a time.
 ## Run it
 
 ```bash
-docker compose up -d --build
+docker run -d --name account-cleanup -p 8080:8080 -v account-cleanup:/data -e TZ=Europe/London --restart unless-stopped ghcr.io/elliottmarter/account-cleanup:latest
 ```
 
-Then open <http://localhost:8080> (or `http://<server-ip>:8080`).
+Then open <http://localhost:8080> (or `http://<server-ip>:8080`). Images are published for
+`amd64` and `arm64` (e.g. Raspberry Pi).
 
-Data lives in the `account-data` Docker volume (`/data/accounts.db`, SQLite). Re-importing a newer
-export is safe — existing accounts keep their status. **Tracker → Download CSV** on the Import page
-exports everything.
+Or with Docker Compose, using the [docker-compose.yml](docker-compose.yml) in this repo:
+
+```bash
+docker compose up -d
+```
+
+Data lives in `/data/accounts.db` (SQLite) inside the container, so keep `/data` on a volume or
+host folder. Re-importing a newer export is safe — existing accounts keep their status.
+**Download tracker as CSV** on the Import page exports everything.
 
 ### On Unraid
 
-1. Copy this whole `account-cleanup` folder onto the server, e.g. to
-   `/mnt/user/appdata/account-cleanup/src` (via a network share, or WinSCP).
-2. In the Unraid web UI open the terminal (`>_` icon, top right) and run:
+1. Open the Unraid terminal (`>_` icon, top right) and download the template:
 
    ```bash
-   cd /mnt/user/appdata/account-cleanup/src && bash unraid-install.sh
+   wget -O /boot/config/plugins/dockerMan/templates-user/my-account-cleanup.xml https://raw.githubusercontent.com/elliottmarter/account-cleanup/main/unraid/account-cleanup.xml
    ```
 
-3. Open `http://<unraid-ip>:8080`. The container appears in the Docker tab with a WebUI link
-   and starts automatically with the array.
+2. Go to **Docker → Add Container**, pick **account-cleanup** from the *Template* dropdown,
+   check the settings and click **Apply**.
 
-Data is stored in `/mnt/user/appdata/account-cleanup/data`, so appdata backups include it.
-To update, copy the new code over `src` and run the script again. Override defaults inline, e.g.
-`PORT=8090 TZ=Europe/Paris bash unraid-install.sh`.
+Data is stored in `/mnt/user/appdata/account-cleanup/data`, so appdata backups include it. Unraid
+shows when a new version is available; click **Update** on the container to get it.
+
+### Updating
+
+```bash
+docker pull ghcr.io/elliottmarter/account-cleanup:latest
+docker rm -f account-cleanup
+```
+
+then run the `docker run` command again (your data stays in the volume). With Compose:
+`docker compose pull && docker compose up -d`.
+
+Version tags such as `:1.0.0` are published for tagged releases, if you'd rather pin a version.
 
 ### Settings (environment variables)
 
@@ -56,7 +72,7 @@ To update, copy the new code over `src` and run the script again. Override defau
 | `TZ` | `UTC` | Time zone used to decide when "today" changes |
 | `APP_PASSWORD` | *(unset)* | If set, the app asks for a login (HTTP basic auth) |
 | `APP_USERNAME` | `admin` | Username for the login prompt |
-| `DATABASE_PATH` | `/data/accounts.db` | SQLite file location |
+| `PUID` / `PGID` | `1000` / `1000` | User and group the app runs as; `/data` is chowned to them on start (Unraid: `99` / `100`) |
 
 The app has no login by default. The tracker holds a list of your accounts and usernames, so set
 `APP_PASSWORD` (or keep the port on your LAN / behind a reverse proxy with auth) if anyone else can reach it.
@@ -66,9 +82,18 @@ The app has no login by default. The tracker holds a list of your accounts and u
 - Bitwarden's unencrypted export contains your passwords in plain text. Delete the file after importing.
 - Uploads are parsed in memory; the raw file is never written to disk.
 
-## Develop without Docker
+## Build from source
+
+```bash
+docker build -t account-cleanup .
+```
+
+Or without Docker:
 
 ```bash
 pip install -r requirements.txt
 DATABASE_PATH=./data/accounts.db python app/app.py
 ```
+
+Every push to `main` builds and publishes `:latest` via GitHub Actions
+([workflow](.github/workflows/docker.yml)); pushing a tag like `v1.2.0` also publishes `:1.2.0` and `:1.2`.
