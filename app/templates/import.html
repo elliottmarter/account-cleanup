@@ -5,7 +5,7 @@
 
 <section class="panel">
   <form method="post" enctype="multipart/form-data" class="stack">
-    <label>Export file (.json or .csv)
+    <label>Export file (.csv recommended, with password columns removed — see below)
       <input type="file" name="export" accept=".json,.csv,application/json,text/csv" required>
     </label>
     <div><button class="btn ok">Import</button></div>
@@ -18,13 +18,18 @@
 </section>
 
 <section class="panel">
-  <h2>Getting an export from Bitwarden</h2>
+  <h2>Preparing your export</h2>
+  <p>
+    The app ignores passwords, but you shouldn't have to take its word for it.
+    <b>It's recommended to export as CSV and remove the passwords yourself, so none are ever uploaded:</b>
+  </p>
   <ol>
-    <li>Open the Bitwarden web vault or desktop app → <b>Tools</b> (or <b>File</b>) → <b>Export vault</b>.</li>
-    <li>Choose <b>.json</b> or <b>.csv</b> — not the encrypted option.</li>
-    <li>Upload it here, then <b>delete the export file</b> from your computer (and empty the recycle bin) — Bitwarden's export contains your passwords in plain text.</li>
+    <li>In Bitwarden (web vault or desktop app) choose <b>Tools</b> (or <b>File</b>) → <b>Export vault</b> and pick <b>.csv</b> — not .json or the encrypted option.</li>
+    <li>Open the file in Excel, LibreOffice Calc or a text editor and <b>delete the <code>login_password</code> and <code>login_totp</code> columns</b>. You can also delete <code>notes</code> and <code>fields</code>, which may contain secrets too. The app only needs <code>name</code>, <code>login_uri</code> and <code>login_username</code>.</li>
+    <li>Save it, still as CSV, and upload it above.</li>
+    <li>Afterwards, <b>permanently delete both the original and the edited export</b> (and empty the recycle bin).</li>
   </ol>
-  <p class="muted">Other password managers work too: any CSV with columns like <code>name</code>, <code>url</code> and <code>username</code> (Chrome, Firefox, 1Password, LastPass, KeePass exports).</p>
+  <p class="muted">Other password managers work too (Chrome, Firefox, 1Password, LastPass, KeePass): keep the name, URL and username columns and delete the rest. A Bitwarden <code>.json</code> export is also accepted, but it still contains your passwords when uploaded.</p>
 </section>
 
 <section class="panel">
