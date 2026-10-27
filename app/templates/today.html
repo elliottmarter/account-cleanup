@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block content %}
+{% if not stats.total %}
+  <section class="empty">
+    <h1>Let's clean up your accounts</h1>
+    <p>Import an export from Bitwarden (or another password manager) to get started. Passwords are never stored.</p>
+    <a class="btn ok" href="{{ url_for('import_page') }}">Import accounts</a>
+  </section>
+{% else %}
+  <section class="stats">
+    <div class="progress-label">
+      <strong>{{ stats.done }}</strong> of {{ stats.target }} accounts cleaned up
+      <span class="muted">({{ stats.pct }}%)</span>
+      {% if stats.streak %}<span class="streak">🔥 {{ stats.streak }}-day streak</span>{% endif %}
+    </div>
+    <div class="progress"><div style="width: {{ stats.pct }}%"></div></div>
+    <div class="chips">
+      {% for key, label in STATUSES.items() %}
+        <a class="chip {{ key }}" href="{{ url_for('accounts', status=key) }}"><b>{{ stats.counts[key] }}</b> {{ label }}</a>
+      {% endfor %}
+    </div>
+  </section>
+
+  <h1>Today <span class="muted">· {{ day.strftime('%A') }} {{ day.day }} {{ day.strftime('%B') }}</span></h1>
+
+  {% for a in picks %}
+    {% with next_url = url_for('today_page') %}{% include "_card.html" %}{% endwith %}
+  {% else %}
+    <section class="empty">
+      <p>Nothing to suggest right now — every account is reviewed, queued for later or snoozed. 🎉</p>
+    </section>
+  {% endfor %}
+
+  <form method="post" action="{{ url_for('another_pick') }}" class="center">
+    <button class="btn ghost">On a roll? Give me another one</button>
+  </form>
+
+  {% if followups %}
+    <h2>Follow up</h2>
+    <p class="muted">You asked these to delete your account more than {{ follow_up_days }} days ago. Check whether it's gone.</p>
+    {% for a in followups %}
+      {% with next_url = url_for('today_page') %}{% include "_card.html" %}{% endwith %}
+    {% endfor %}
+  {% endif %}
+
+  {% if vault_cleanup %}
+    <div class="flash info">
+      {{ vault_cleanup }} deleted account{{ 's' if vault_cleanup != 1 }} still in your password manager.
+      <a href="{{ url_for('accounts', status='vault') }}">Review them</a>
+    </div>
+  {% endif %}
+
+  <details class="settings">
+    <summary>Settings</summary>
+    <form method="post" action="{{ url_for('save_settings') }}" class="inline-form">
+      <label>Accounts per day <input type="number" name="daily_count" min="1" max="20" value="{{ daily_count }}"></label>
+      <label>Follow up on requests after <input type="number" name="follow_up_days" min="1" max="365" value="{{ follow_up_days }}"> days</label>
+      <button class="btn small">Save</button>
+    </form>
+    <p class="muted">Changes to the daily count apply from tomorrow — use "Give me another" for more today.</p>
+  </details>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Accounts · Account Cleanup{% endblock %}
+{% block content %}
+<h1>Accounts <span class="muted">· {{ rows|length }}</span></h1>
+
+<form method="get" class="filters">
+  <input type="search" name="q" value="{{ q }}" placeholder="Search name, domain, username, notes…">
+  <select name="status">
+    <option value="">All statuses</option>
+    {% for key, label in STATUSES.items() %}
+      <option value="{{ key }}" {{ 'selected' if status == key }}>{{ label }}</option>
+    {% endfor %}
+    <option value="snoozed" {{ 'selected' if status == 'snoozed' }}>Snoozed</option>
+    <option value="vault" {{ 'selected' if status == 'vault' }}>Deleted but still in vault</option>
+  </select>
+  <select name="sort">
+    <option value="name" {{ 'selected' if sort == 'name' }}>Sort by name</option>
+    <option value="domain" {{ 'selected' if sort == 'domain' }}>Sort by domain</option>
+    <option value="status" {{ 'selected' if sort == 'status' }}>Sort by status</option>
+    <option value="updated" {{ 'selected' if sort == 'updated' }}>Oldest first</option>
+  </select>
+  <button class="btn small">Filter</button>
+</form>
+
+{% if rows %}
+<form method="post" action="{{ url_for('bulk_update') }}">
+  <input type="hidden" name="next" value="{{ request.full_path }}">
+  <div class="bulk">
+    <label><input type="checkbox" id="select-all"> Select all</label>
+    <select name="status">
+      <option value="">Mark selected as…</option>
+      {% for key, label in STATUSES.items() %}<option value="{{ key }}">{{ label }}</option>{% endfor %}
+    </select>
+    <button class="btn small">Apply</button>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th></th><th>Name</th><th>Username</th><th>Folder</th><th>Status</th><th>Last touched</th></tr></thead>
+      <tbody>
+      {% for a in rows %}
+        <tr>
+          <td><input type="checkbox" name="ids" value="{{ a.id }}"></td>
+          <td>
+            <a href="{{ url_for('account_detail', account_id=a.id) }}">{{ a.name }}</a>
+            {% if a.domain and a.domain != a.name|lower %}<div class="muted small">{{ a.domain }}</div>{% endif %}
+          </td>
+          <td class="small">{{ a.username }}</td>
+          <td class="small">{{ a.folder }}</td>
+          <td><span class="badge {{ a.status }}">{{ STATUSES[a.status] }}</span>
+            {% if a.status in CLOSED and not a.vault_removed %}<div class="muted small">still in vault</div>{% endif %}</td>
+          <td class="small">{{ a.vault_updated|nicedate if a.vault_updated else '' }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</form>
+{% else %}
+  <section class="empty"><p>No accounts match.</p></section>
+{% endif %}
+{% endblock %}
+{% block scripts %}
+<script>
+  const all = document.getElementById("select-all");
+  if (all) all.addEventListener("change", () =>
+    document.querySelectorAll('input[name="ids"]').forEach((cb) => (cb.checked = all.checked)));
+</script>
+{% endblock %}

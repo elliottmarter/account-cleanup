@@ -1,0 +1,67 @@
+{# Expects: a (account row), next_url #}
+<article class="card status-{{ a.status }}">
+  <div class="card-head">
+    <div>
+      <h3><a href="{{ url_for('account_detail', account_id=a.id) }}">{{ a.name }}</a></h3>
+      <div class="meta">
+        {% if a.domain %}<span>{{ a.domain }}</span>{% endif %}
+        {% if a.username %}<span>{{ a.username }}</span>{% endif %}
+        {% if a.folder %}<span>📁 {{ a.folder }}</span>{% endif %}
+        {% if a.vault_updated %}<span title="Last changed in your vault: {{ a.vault_updated|nicedate }}">last touched {{ a.vault_updated|ago }}</span>{% endif %}
+      </div>
+    </div>
+    <span class="badge {{ a.status }}">{{ STATUSES[a.status] }}</span>
+  </div>
+
+  {% if a.notes %}<p class="notes">{{ a.notes }}</p>{% endif %}
+
+  {% if a.status in CLOSED %}
+    <div class="done-row">
+      <span>✓ Done{% if a.status_changed_at %} {{ a.status_changed_at|nicedate }}{% endif %}</span>
+      {% if not a.vault_removed %}
+        <form method="post" action="{{ url_for('vault_removed', account_id=a.id) }}">
+          <input type="hidden" name="next" value="{{ next_url }}">
+          <button class="btn small">I've removed it from my password manager</button>
+        </form>
+      {% else %}
+        <span class="muted">Removed from vault</span>
+      {% endif %}
+    </div>
+  {% else %}
+    <div class="links">
+      {% if a.url|weburl %}<a class="btn small ghost" href="{{ a.url|weburl }}" target="_blank" rel="noopener noreferrer">Open site ↗</a>{% endif %}
+      <a class="btn small ghost" href="{{ a|searchurl }}" target="_blank" rel="noopener noreferrer">How do I delete this? ↗</a>
+    </div>
+
+    <form method="post" action="{{ url_for('change_status', account_id=a.id) }}" class="actions">
+      <input type="hidden" name="next" value="{{ next_url }}">
+      <button name="status" value="deleted" class="btn danger">I deleted it</button>
+      <button name="status" value="requested" class="btn warn">Requested deletion</button>
+      <button name="status" value="gone" class="btn">Site no longer exists</button>
+      <button name="status" value="keep" class="btn ok">Keep it</button>
+      {% if a.status != 'delete' %}<button name="status" value="delete" class="btn">Delete later</button>{% endif %}
+    </form>
+    <form method="post" action="{{ url_for('snooze', account_id=a.id) }}" class="snooze">
+      <input type="hidden" name="next" value="{{ next_url }}">
+      <span class="muted">Not today:</span>
+      <button name="days" value="1" class="btn small ghost">Tomorrow</button>
+      <button name="days" value="7" class="btn small ghost">1 week</button>
+      <button name="days" value="30" class="btn small ghost">1 month</button>
+    </form>
+
+    <details class="email">
+      <summary>No delete button? Request deletion by email</summary>
+      <p class="muted">Send this to the site's support or privacy contact (often privacy@, dpo@ or support@ the domain).</p>
+      <textarea id="email-{{ a.id }}" rows="10" readonly>Subject: Request to delete my account and personal data
+
+Hello,
+
+I would like my {{ a.name }} account{% if a.username %} registered to "{{ a.username }}"{% endif %} to be closed, and all personal data you hold about me to be erased, under Article 17 of the UK/EU General Data Protection Regulation (right to erasure).
+
+Please confirm in writing once this has been completed.
+
+Thank you.</textarea>
+      <button type="button" class="btn small" data-copy="email-{{ a.id }}">Copy</button>
+    </details>
+  {% endif %}
+</article>

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Import · Account Cleanup{% endblock %}
+{% block content %}
+<h1>Import accounts</h1>
+
+<section class="panel">
+  <form method="post" enctype="multipart/form-data" class="stack">
+    <label>Export file (.json or .csv)
+      <input type="file" name="export" accept=".json,.csv,application/json,text/csv" required>
+    </label>
+    <div><button class="btn ok">Import</button></div>
+  </form>
+  <p class="muted">
+    Only names, website addresses, usernames, folders and dates are kept. Passwords, 2FA codes,
+    notes and custom fields in the file are ignored and never saved. Re-importing a newer export is
+    safe: existing accounts keep their status and new ones are added.
+  </p>
+</section>
+
+<section class="panel">
+  <h2>Getting an export from Bitwarden</h2>
+  <ol>
+    <li>Open the Bitwarden web vault or desktop app → <b>Tools</b> (or <b>File</b>) → <b>Export vault</b>.</li>
+    <li>Choose <b>.json</b> or <b>.csv</b> — not the encrypted option.</li>
+    <li>Upload it here, then <b>delete the export file</b> from your computer (and empty the recycle bin) — Bitwarden's export contains your passwords in plain text.</li>
+  </ol>
+  <p class="muted">Other password managers work too: any CSV with columns like <code>name</code>, <code>url</code> and <code>username</code> (Chrome, Firefox, 1Password, LastPass, KeePass exports).</p>
+</section>
+
+<section class="panel">
+  <h2>Your data</h2>
+  <p>{{ stats.total }} accounts tracked. <a href="{{ url_for('export_csv') }}">Download tracker as CSV</a></p>
+  <details>
+    <summary>Reset everything</summary>
+    <form method="post" action="{{ url_for('reset') }}" class="inline-form">
+      <label>Type DELETE to wipe all tracked accounts and history <input name="confirm" autocomplete="off"></label>
+      <button class="btn danger small">Reset</button>
+    </form>
+  </details>
+</section>
+{% endblock %}

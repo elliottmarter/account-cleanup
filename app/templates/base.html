@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Account Cleanup{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="{{ url_for('today_page') }}">Account Cleanup</a>
+    <nav>
+      {% set ep = request.endpoint %}
+      <a href="{{ url_for('today_page') }}" class="{{ 'active' if ep == 'today_page' }}">Today</a>
+      <a href="{{ url_for('triage') }}" class="{{ 'active' if ep == 'triage' }}">Triage{% if nav_to_review %} <span class="pill">{{ nav_to_review }}</span>{% endif %}</a>
+      <a href="{{ url_for('accounts') }}" class="{{ 'active' if ep in ('accounts', 'account_detail') }}">Accounts</a>
+      <a href="{{ url_for('import_page') }}" class="{{ 'active' if ep == 'import_page' }}">Import</a>
+    </nav>
+  </header>
+  <main>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="flash {{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+  <script>
+    // Copy buttons for the deletion-request email template (clipboard API needs HTTPS, so fall back).
+    document.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-copy]");
+      if (!btn) return;
+      const field = document.getElementById(btn.dataset.copy);
+      field.select();
+      const done = () => { btn.textContent = "Copied"; setTimeout(() => (btn.textContent = "Copy"), 1500); };
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(field.value).then(done);
+      } else if (document.execCommand("copy")) {
+        done();
+      }
+    });
+  </script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Triage · Account Cleanup{% endblock %}
+{% block content %}
+<h1>Triage</h1>
+<p class="muted">
+  Quickly sort accounts into keep or delete. Nothing gets deleted here — accounts you mark
+  "Delete" are queued and suggested on the Today page one at a time.
+  {{ stats.reviewed_pct }}% reviewed, {{ stats.counts.unreviewed }} to go.
+</p>
+<div class="progress"><div style="width: {{ stats.reviewed_pct }}%"></div></div>
+
+{% if account %}
+  <article class="card triage-card">
+    <h2>{{ account.name }}</h2>
+    <div class="meta">
+      {% if account.domain %}<span>{{ account.domain }}</span>{% endif %}
+      {% if account.username %}<span>{{ account.username }}</span>{% endif %}
+      {% if account.folder %}<span>📁 {{ account.folder }}</span>{% endif %}
+      {% if account.vault_updated %}<span>last touched {{ account.vault_updated|ago }}</span>{% endif %}
+    </div>
+    {% if account.url|weburl %}
+      <p><a href="{{ account.url|weburl }}" target="_blank" rel="noopener noreferrer">{{ account.url }}</a></p>
+    {% endif %}
+
+    <form method="post" action="{{ url_for('change_status', account_id=account.id) }}" class="actions big">
+      <input type="hidden" name="next" value="{{ url_for('triage') }}">
+      <button name="status" value="keep" class="btn ok" data-key="k">Keep <kbd>K</kbd></button>
+      <button name="status" value="delete" class="btn danger" data-key="d">Delete <kbd>D</kbd></button>
+      <button name="status" value="gone" class="btn" data-key="g">Site gone <kbd>G</kbd></button>
+    </form>
+    <form method="post" action="{{ url_for('snooze', account_id=account.id) }}" class="actions">
+      <input type="hidden" name="next" value="{{ url_for('triage') }}">
+      <button name="days" value="7" class="btn ghost" data-key="s">Not sure — ask me next week <kbd>S</kbd></button>
+    </form>
+  </article>
+{% else %}
+  <section class="empty">
+    <p>Nothing left to triage. 🎉</p>
+    <a class="btn" href="{{ url_for('today_page') }}">Back to Today</a>
+  </section>
+{% endif %}
+{% endblock %}
+{% block scripts %}
+<script>
+  document.addEventListener("keydown", (e) => {
+    if (e.ctrlKey || e.metaKey || e.altKey || e.target.matches("input, textarea, select")) return;
+    const btn = document.querySelector(`[data-key="${e.key.toLowerCase()}"]`);
+    if (btn) { e.preventDefault(); btn.click(); }
+  });
+</script>
+{% endblock %}

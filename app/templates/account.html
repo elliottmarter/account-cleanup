@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}{{ a.name }} · Account Cleanup{% endblock %}
+{% block content %}
+<p><a href="{{ url_for('accounts') }}">← All accounts</a></p>
+
+{% with next_url = url_for('account_detail', account_id=a.id) %}{% include "_card.html" %}{% endwith %}
+
+{% if a.status in CLOSED %}
+  <form method="post" action="{{ url_for('change_status', account_id=a.id) }}" class="actions">
+    <input type="hidden" name="next" value="{{ url_for('account_detail', account_id=a.id) }}">
+    <span class="muted">Changed your mind?</span>
+    <button name="status" value="unreviewed" class="btn small ghost">Back to "To review"</button>
+    <button name="status" value="keep" class="btn small ghost">Keep it</button>
+  </form>
+{% endif %}
+
+<section class="panel">
+  <h2>Details</h2>
+  <dl class="details">
+    <dt>URL</dt><dd>{% if a.url|weburl %}<a href="{{ a.url|weburl }}" target="_blank" rel="noopener noreferrer">{{ a.url }}</a>{% else %}{{ a.url or '—' }}{% endif %}</dd>
+    <dt>Username</dt><dd>{{ a.username or '—' }}</dd>
+    <dt>Folder</dt><dd>{{ a.folder or '—' }}</dd>
+    <dt>Created in vault</dt><dd>{{ a.vault_created|nicedate }}</dd>
+    <dt>Last changed in vault</dt><dd>{{ a.vault_updated|nicedate }}</dd>
+    <dt>Imported</dt><dd>{{ a.imported_at|nicedate }}</dd>
+    {% if a.snoozed_until %}<dt>Snoozed until</dt><dd>{{ a.snoozed_until|nicedate }}</dd>{% endif %}
+  </dl>
+
+  <form method="post" action="{{ url_for('account_save', account_id=a.id) }}" class="stack">
+    <label>Notes
+      <textarea name="notes" rows="4" placeholder="e.g. emailed support 3 Nov, ticket #1234">{{ a.notes }}</textarea>
+    </label>
+    <label>Priority
+      <select name="priority">
+        <option value="0" {{ 'selected' if a.priority == 0 }}>Normal</option>
+        <option value="1" {{ 'selected' if a.priority == 1 }}>High — suggest sooner</option>
+        <option value="2" {{ 'selected' if a.priority == 2 }}>Urgent — suggest next</option>
+      </select>
+    </label>
+    <label class="check"><input type="checkbox" name="vault_removed" value="1" {{ 'checked' if a.vault_removed }}> Removed from my password manager</label>
+    <div><button class="btn">Save</button></div>
+  </form>
+</section>
+
+<section class="panel">
+  <h2>History</h2>
+  {% if events %}
+    <ul class="history">
+      {% for e in events %}
+        <li><span class="muted">{{ e.at|nicedate }}</span> {{ STATUSES.get(e.from_status, e.from_status) }} → <b>{{ STATUSES.get(e.to_status, e.to_status) }}</b></li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="muted">No changes yet.</p>
+  {% endif %}
+</section>
+
+<form method="post" action="{{ url_for('remove_account', account_id=a.id) }}"
+      data-msg="Remove {{ a.name }} from the tracker? This only removes it from this app."
+      onsubmit="return confirm(this.dataset.msg);">
+  <button class="btn small ghost">Remove from tracker</button>
+</form>
+{% endblock %}

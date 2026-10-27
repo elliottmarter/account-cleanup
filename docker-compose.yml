@@ -1,0 +1,16 @@
+services:
+  account-cleanup:
+    build: .
+    container_name: account-cleanup
+    ports:
+      - "8080:8080"
+    environment:
+      TZ: Europe/London            # decides when "today" rolls over
+      # APP_USERNAME: admin        # optional login prompt - recommended if
+      # APP_PASSWORD: change-me    # anyone else can reach this port
+    volumes:
+      - account-data:/data
+    restart: unless-stopped
+
+volumes:
+  account-data:
