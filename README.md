@@ -10,6 +10,8 @@
 A small self-hosted web app for working through your old online accounts and
 deleting the ones you no longer need — a little at a time.
 
+<img width="877" height="788" alt="image" src="https://github.com/user-attachments/assets/aac9ae19-365c-4166-addd-c1aea8fe2a87" />
+
 1. **Import** a Bitwarden export (`.json` or `.csv`; other password managers' CSVs work too).
    Only names, URLs, usernames, folders and dates are kept — passwords, 2FA seeds and notes are discarded.
    **Recommended:** export as `.csv` and delete the password columns yourself before uploading
