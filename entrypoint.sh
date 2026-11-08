@@ -3,6 +3,11 @@
 # is writable by that user, even when Docker created the host folder as root.
 set -e
 
+if [ -z "$APP_USERNAME" ] || [ -z "$APP_PASSWORD" ]; then
+    echo "account-cleanup: APP_USERNAME and APP_PASSWORD must both be set. Refusing to start." >&2
+    exit 1
+fi
+
 if [ "$(id -u)" = "0" ]; then
     PUID=${PUID:-1000}
     PGID=${PGID:-1000}

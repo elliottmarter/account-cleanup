@@ -37,8 +37,10 @@ SORTS = {
 }
 
 TZ = ZoneInfo(os.environ.get("TZ") or "UTC")
-APP_USERNAME = os.environ.get("APP_USERNAME", "admin")
+APP_USERNAME = os.environ.get("APP_USERNAME", "")
 APP_PASSWORD = os.environ.get("APP_PASSWORD", "")
+if not (APP_USERNAME and APP_PASSWORD):
+    raise SystemExit("APP_USERNAME and APP_PASSWORD must both be set. Refusing to start.")
 
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 25 * 1024 * 1024
@@ -86,7 +88,7 @@ def parse_dt(value):
 
 @app.before_request
 def require_auth():
-    if not APP_PASSWORD or request.path == "/healthz":
+    if request.path == "/healthz":
         return None
     auth = request.authorization
     if (
@@ -441,7 +443,6 @@ def import_page():
         "import.html",
         stats=get_stats(db.get_db()),
         bw=bitwarden.status(),
-        app_password_set=bool(APP_PASSWORD),
     )
 
 

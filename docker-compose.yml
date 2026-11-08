@@ -9,8 +9,8 @@ services:
       TZ: Europe/London            # decides when "today" rolls over
       # PUID: 1000                 # user/group the app runs as and owns /data
       # PGID: 1000
-      # APP_USERNAME: admin        # optional login prompt - recommended if
-      # APP_PASSWORD: change-me    # anyone else can reach this port
+      APP_USERNAME: change-me      # required: login for the web UI;
+      APP_PASSWORD: change-me      # the container won't start without both
       # Optional: sync from / delete in your Bitwarden vault (see README)
       # BW_CLIENTID: user.xxxxxxxx
       # BW_CLIENTSECRET: xxxxxxxx

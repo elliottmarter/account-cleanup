@@ -15,12 +15,12 @@
   <Config Name="Web UI port" Target="8080" Default="8080" Mode="tcp" Description="Port for the web interface" Type="Port" Display="always" Required="true" Mask="false">8080</Config>
   <Config Name="Data" Target="/data" Default="/mnt/user/appdata/account-cleanup/data" Mode="rw" Description="Where the tracker database is stored" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/account-cleanup/data</Config>
   <Config Name="Time zone" Target="TZ" Default="Europe/London" Description="Decides when the daily suggestion rolls over" Type="Variable" Display="always" Required="false" Mask="false">Europe/London</Config>
-  <Config Name="Password" Target="APP_PASSWORD" Default="" Description="Optional. If set, the web UI asks for a login (username below)" Type="Variable" Display="always" Required="false" Mask="true"></Config>
-  <Config Name="Username" Target="APP_USERNAME" Default="admin" Description="Login username, used only when a password is set" Type="Variable" Display="advanced" Required="false" Mask="false">admin</Config>
+  <Config Name="Username" Target="APP_USERNAME" Default="" Description="Required. Username for the web UI login" Type="Variable" Display="always" Required="true" Mask="false"></Config>
+  <Config Name="Password" Target="APP_PASSWORD" Default="" Description="Required. Password for the web UI login. The container won't start without a username and password." Type="Variable" Display="always" Required="true" Mask="true"></Config>
   <Config Name="Bitwarden client_id" Target="BW_CLIENTID" Default="" Description="Optional. Personal API key client_id (Bitwarden: Settings - Security - Keys - View API key). Enables vault sync and delete." Type="Variable" Display="always" Required="false" Mask="false"></Config>
   <Config Name="Bitwarden client_secret" Target="BW_CLIENTSECRET" Default="" Description="Optional. Personal API key client_secret" Type="Variable" Display="always" Required="false" Mask="true"></Config>
-  <Config Name="Bitwarden server" Target="BW_SERVER" Default="" Description="Leave empty for bitwarden.com. Use https://vault.bitwarden.eu for the EU cloud, or your Vaultwarden URL" Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
-  <Config Name="Vault auto-lock minutes" Target="BW_LOCK_MINUTES" Default="15" Description="Lock the vault after this many idle minutes" Type="Variable" Display="advanced" Required="false" Mask="false">15</Config>
-  <Config Name="PUID" Target="PUID" Default="99" Description="User ID the app runs as" Type="Variable" Display="advanced" Required="false" Mask="false">99</Config>
-  <Config Name="PGID" Target="PGID" Default="100" Description="Group ID the app runs as" Type="Variable" Display="advanced" Required="false" Mask="false">100</Config>
+  <Config Name="Bitwarden server" Target="BW_SERVER" Default="" Description="Leave empty for bitwarden.com. Use https://vault.bitwarden.eu for the EU cloud, or your Vaultwarden URL" Type="Variable" Display="always" Required="false" Mask="false"></Config>
+  <Config Name="Vault auto-lock minutes" Target="BW_LOCK_MINUTES" Default="15" Description="Lock the vault after this many idle minutes" Type="Variable" Display="always" Required="false" Mask="false">15</Config>
+  <Config Name="PUID" Target="PUID" Default="99" Description="User ID the app runs as" Type="Variable" Display="always" Required="false" Mask="false">99</Config>
+  <Config Name="PGID" Target="PGID" Default="100" Description="Group ID the app runs as" Type="Variable" Display="always" Required="false" Mask="false">100</Config>
 </Container>

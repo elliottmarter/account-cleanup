@@ -44,9 +44,6 @@
       codes, passkeys, notes and custom fields are discarded and never saved. Accounts you already track are matched by
       site and username and keep their status.
     </p>
-    {% if not app_password_set %}
-      <div class="flash error">No <code>APP_PASSWORD</code> is set, so anyone who can open this page can delete items from your vault while it's unlocked. Set one, or keep the vault locked when you're not using it.</div>
-    {% endif %}
   {% endif %}
 </section>
 

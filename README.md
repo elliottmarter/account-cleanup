@@ -29,13 +29,15 @@ deleting the ones you no longer need — a little at a time.
 ## Run it
 
 ```bash
-docker run -d --name account-cleanup -p 8080:8080 -v account-cleanup:/data -e TZ=Europe/London --restart unless-stopped ghcr.io/elliottmarter/account-cleanup:latest
+docker run -d --name account-cleanup -p 8080:8080 -v account-cleanup:/data -e TZ=Europe/London -e APP_USERNAME=me -e APP_PASSWORD=pick-a-password --restart unless-stopped ghcr.io/elliottmarter/account-cleanup:latest
 ```
 
-Then open <http://localhost:8080> (or `http://<server-ip>:8080`). Images are published for
+Change the username and password first: the container won't start without them. Then open
+<http://localhost:8080> (or `http://<server-ip>:8080`) and log in. Images are published for
 `amd64` and `arm64` (e.g. Raspberry Pi).
 
-Or with Docker Compose, using the [docker-compose.yml](docker-compose.yml) in this repo:
+Or with Docker Compose, using the [docker-compose.yml](docker-compose.yml) in this repo (set
+`APP_USERNAME` and `APP_PASSWORD` in it first):
 
 ```bash
 docker compose up -d
@@ -54,7 +56,7 @@ host folder. Re-importing a newer export is safe — existing accounts keep thei
    ```
 
 2. Go to **Docker → Add Container**, pick **account-cleanup** from the *Template* dropdown,
-   check the settings and click **Apply**.
+   choose a **Username** and **Password** (both required), check the other settings and click **Apply**.
 
 Data is stored in `/mnt/user/appdata/account-cleanup/data`, so appdata backups include it. Unraid
 shows when a new version is available; click **Update** on the container to get it.
@@ -76,15 +78,16 @@ Version tags such as `:1.0.0` are published for tagged releases, if you'd rather
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `TZ` | `UTC` | Time zone used to decide when "today" changes |
-| `APP_PASSWORD` | *(unset)* | If set, the app asks for a login (HTTP basic auth) |
-| `APP_USERNAME` | `admin` | Username for the login prompt |
+| `APP_USERNAME` | **required** | Username for the web UI login (HTTP basic auth) |
+| `APP_PASSWORD` | **required** | Password for the web UI login. The container won't start without both |
 | `BW_CLIENTID` / `BW_CLIENTSECRET` | *(unset)* | Bitwarden personal API key; turns on [Bitwarden sync](#bitwarden-sync-optional) |
 | `BW_SERVER` | bitwarden.com | `https://vault.bitwarden.eu` for the EU cloud, or your Vaultwarden URL |
 | `BW_LOCK_MINUTES` | `15` | Lock the vault again after this many idle minutes |
 | `PUID` / `PGID` | `1000` / `1000` | User and group the app runs as; `/data` is chowned to them on start (Unraid: `99` / `100`) |
 
-The app has no login by default. The tracker holds a list of your accounts and usernames, so set
-`APP_PASSWORD` (or keep the port on your LAN / behind a reverse proxy with auth) if anyone else can reach it.
+A login is always required, because the tracker holds a list of your accounts and usernames and, with
+Bitwarden sync, can delete vault items. Basic auth isn't encrypted on its own, so keep the port on your
+LAN or put it behind a reverse proxy with HTTPS.
 
 ### Bitwarden sync (optional)
 
@@ -114,8 +117,8 @@ How it's handled:
   the EU cloud, or the `BW_SERVER` you set). The app itself makes no outbound requests and loads nothing
   from the internet.
 - The CLI keeps its login and an encrypted copy of the vault in `/data/bitwarden`, like any Bitwarden client.
-- While the vault is unlocked, anyone who can reach the app can delete vault items, so **set
-  `APP_PASSWORD`** and don't expose the port to the internet. Requests coming from other websites are refused.
+- While the vault is unlocked, anyone who can log in to the app can delete vault items, so use a strong
+  `APP_PASSWORD` and don't expose the port to the internet. Requests coming from other websites are refused.
 - Deleting only removes the entry from Bitwarden. It doesn't close the account on the website itself.
 
 ### Preparing your export
