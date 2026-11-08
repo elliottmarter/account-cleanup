@@ -96,7 +96,7 @@ bitwarden.com, the EU cloud and Vaultwarden.
    `client_id` and `client_secret` into `BW_CLIENTID` and `BW_CLIENTSECRET` on the container.
    (For the EU cloud or Vaultwarden, also set `BW_SERVER`.)
 2. Open **Import**, type your master password and click **Unlock**.
-3. Click **Sync now**. Each login's name, website, username, folder, dates and **notes** are copied in.
+3. Click **Sync now**. Only each login's name, website, username, folder and dates are copied in.
    Accounts you already track (from an earlier import) are matched by site and username and keep their status.
 4. On an account's page, or on a finished card, **Delete from Bitwarden** moves that login to your
    Bitwarden trash, where you can still restore it for 30 days.
@@ -108,8 +108,11 @@ How it's handled:
 - The unlocked session exists only in memory. It's dropped after `BW_LOCK_MINUTES` without use, when you
   click **Lock**, or when the container restarts.
 - The CLI returns full items, passwords included, to the app's process. The app keeps only the fields
-  listed above and discards the rest straight away. Passwords, 2FA seeds and custom fields are never
-  written to the database. Notes **are** saved, so don't sync if your notes contain secrets.
+  listed above and discards the rest straight away. Passwords, password history, 2FA seeds, passkeys,
+  notes and custom fields are never written to the database, shown in the UI or logged.
+- The only network traffic is between the bundled `bw` CLI and your own Bitwarden server (bitwarden.com,
+  the EU cloud, or the `BW_SERVER` you set). The app itself makes no outbound requests and loads nothing
+  from the internet.
 - The CLI keeps its login and an encrypted copy of the vault in `/data/bitwarden`, like any Bitwarden client.
 - While the vault is unlocked, anyone who can reach the app can delete vault items, so **set
   `APP_PASSWORD`** and don't expose the port to the internet. Requests coming from other websites are refused.

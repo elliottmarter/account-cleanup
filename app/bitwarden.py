@@ -3,7 +3,7 @@
 The CLI does all the encryption. This module only:
   * logs in with a personal API key (BW_CLIENTID / BW_CLIENTSECRET),
   * unlocks with the master password typed into the web UI (never stored),
-  * lists login items, keeping only name, URLs, username, notes, folder and dates,
+  * lists login items, keeping only name, URLs, username, folder and dates,
   * moves single items to the Bitwarden trash.
 
 The unlock "session key" lives only in this process's memory and is dropped
@@ -151,7 +151,10 @@ def _require_session():
 
 
 def fetch_logins():
-    """Sync with the server and return login items with passwords, TOTP and custom fields removed."""
+    """Sync with the server and return login items reduced to an allow-list of fields.
+
+    Passwords, password history, TOTP seeds, passkeys, notes and custom fields are never copied.
+    """
     with _lock:
         session = _require_session()
         _run(["sync"], session=session, timeout=180)
@@ -170,7 +173,6 @@ def fetch_logins():
             "name": item.get("name") or "",
             "uris": [u.get("uri") for u in login.get("uris") or [] if isinstance(u, dict)],
             "username": login.get("username") or "",
-            "notes": item.get("notes") or "",
             "folder": "" if folder == "No Folder" else folder,
             "created": item.get("creationDate"),
             "updated": item.get("revisionDate"),

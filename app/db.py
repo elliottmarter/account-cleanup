@@ -25,8 +25,7 @@ CREATE TABLE IF NOT EXISTS accounts (
     snoozed_until TEXT,
     imported_at TEXT NOT NULL,
     status_changed_at TEXT,
-    vault_id TEXT,
-    vault_notes TEXT NOT NULL DEFAULT ''
+    vault_id TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_accounts_status ON accounts(status);
 
@@ -92,8 +91,12 @@ def init_db():
 
 # Columns added after the first release: (name, definition)
 ADDED_COLUMNS = [
-    ("vault_id", "TEXT"),                            # Bitwarden item id, set by vault sync
-    ("vault_notes", "TEXT NOT NULL DEFAULT ''"),     # notes field from the vault item
+    ("vault_id", "TEXT"),  # Bitwarden item id, set by vault sync
+]
+
+# Columns that used to exist and must be wiped from older databases.
+REMOVED_COLUMNS = [
+    "vault_notes",  # vault item notes, synced by an early version; notes can hold secrets
 ]
 
 
@@ -102,6 +105,16 @@ def migrate(conn):
     for name, definition in ADDED_COLUMNS:
         if name not in existing:
             conn.execute(f"ALTER TABLE accounts ADD COLUMN {name} {definition}")
+    stale = [name for name in REMOVED_COLUMNS if name in existing]
+    if stale:
+        # Overwrite freed pages with zeros so the old values don't linger in the file.
+        conn.execute("PRAGMA secure_delete = ON")
+        for name in stale:
+            conn.execute(f"UPDATE accounts SET {name} = ''")
+            conn.execute(f"ALTER TABLE accounts DROP COLUMN {name}")
+        conn.commit()
+        conn.execute("VACUUM")
+        conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
     conn.execute(
         "CREATE UNIQUE INDEX IF NOT EXISTS idx_accounts_vault_id ON accounts(vault_id) WHERE vault_id IS NOT NULL"
     )

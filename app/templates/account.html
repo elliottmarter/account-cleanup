@@ -25,7 +25,6 @@
     <dt>Imported</dt><dd>{{ a.imported_at|nicedate }}</dd>
     {% if a.snoozed_until %}<dt>Snoozed until</dt><dd>{{ a.snoozed_until|nicedate }}</dd>{% endif %}
     {% if a.vault_id %}<dt>Bitwarden</dt><dd>{{ 'Removed from vault' if a.vault_removed else 'Linked to vault item' }}</dd>{% endif %}
-    {% if a.vault_notes %}<dt>Vault notes</dt><dd class="vault-notes">{{ a.vault_notes }}</dd>{% endif %}
   </dl>
 
   <form method="post" action="{{ url_for('account_save', account_id=a.id) }}" class="stack">

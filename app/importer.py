@@ -142,7 +142,6 @@ def vault_record(item):
     record = _record(item["name"], pick_url(item["uris"]), item["username"], item["folder"],
                      item["created"], item["updated"])
     record["vault_id"] = item["vault_id"]
-    record["notes"] = item["notes"]
     return record
 
 

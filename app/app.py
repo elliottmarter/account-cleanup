@@ -332,9 +332,8 @@ def accounts():
         where.append("snoozed_until > ?")
         params.append(today())
     if q:
-        where.append("(name LIKE ? OR domain LIKE ? OR username LIKE ? OR folder LIKE ?"
-                     " OR notes LIKE ? OR vault_notes LIKE ?)")
-        params += [f"%{q}%"] * 6
+        where.append("(name LIKE ? OR domain LIKE ? OR username LIKE ? OR folder LIKE ? OR notes LIKE ?)")
+        params += [f"%{q}%"] * 5
     sql = "SELECT * FROM accounts"
     if where:
         sql += " WHERE " + " AND ".join(where)
@@ -475,10 +474,10 @@ def link_or_insert(conn, r, stamp):
     if row is not None:
         conn.execute(
             """UPDATE accounts SET vault_id = ?, name = ?, domain = ?, url = ?, username = ?, folder = ?,
-               vault_notes = ?, vault_created = COALESCE(?, vault_created),
+               vault_created = COALESCE(?, vault_created),
                vault_updated = COALESCE(?, vault_updated), vault_removed = 0 WHERE id = ?""",
             (r["vault_id"], r["name"], r["domain"], r["url"], r["username"], r["folder"],
-             r["notes"], r["created"], r["updated"], row["id"]),
+             r["created"], r["updated"], row["id"]),
         )
         return False
     key = r["dedupe_key"]
@@ -486,10 +485,10 @@ def link_or_insert(conn, r, stamp):
         key = f"{key}|{r['vault_id']}"  # same site + username twice in the vault
     conn.execute(
         """INSERT INTO accounts (dedupe_key, name, domain, url, username, folder, source,
-                                 vault_created, vault_updated, imported_at, vault_id, vault_notes)
-           VALUES (?, ?, ?, ?, ?, ?, 'bitwarden-sync', ?, ?, ?, ?, ?)""",
+                                 vault_created, vault_updated, imported_at, vault_id)
+           VALUES (?, ?, ?, ?, ?, ?, 'bitwarden-sync', ?, ?, ?, ?)""",
         (key, r["name"], r["domain"], r["url"], r["username"], r["folder"],
-         r["created"], r["updated"], stamp, r["vault_id"], r["notes"]),
+         r["created"], r["updated"], stamp, r["vault_id"]),
     )
     return True
 

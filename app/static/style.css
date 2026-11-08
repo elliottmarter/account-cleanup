@@ -131,4 +131,3 @@ tr:last-child td { border-bottom: none; }
 .details dd { margin: 0; word-break: break-all; }
 .history { list-style: none; padding: 0; margin: 0; }
 .history li { padding: .3rem 0; border-bottom: 1px solid var(--border); }
-.vault-notes { white-space: pre-wrap; }
