@@ -146,12 +146,6 @@ def ago(value):
     return f"{years} year{'s' if years != 1 else ''} ago"
 
 
-@app.template_filter("as_open")
-def as_open(account):
-    """Copy of an account row as if still To review (the card's tallest layout)."""
-    return {**dict(account), "status": "unreviewed"}
-
-
 @app.template_filter("weburl")
 def weburl(url):
     if not url or url.lower().startswith(("androidapp://", "iosapp://")):

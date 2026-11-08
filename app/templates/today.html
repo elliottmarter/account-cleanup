@@ -25,21 +25,15 @@
   <h1>Today <span class="muted">· {{ day.strftime('%A') }} {{ day.day }} {{ day.strftime('%B') }} · <b>{{ stats.processed_today }}</b> processed today</span></h1>
 
   {% if pick %}
-    {# The invisible copy is the card in its tallest (open) state, so the slot - and the
-       Previous / Next buttons below it - stay put when an account is finished. #}
-    <div class="today-slot">
-      {% with a = pick, next_url = url_for('today_page', n=n) %}{% include "_card.html" %}{% endwith %}
-      <div class="slot-ghost" aria-hidden="true" inert>
-        {% with a = pick|as_open, next_url = '' %}{% include "_card.html" %}{% endwith %}
-      </div>
-    </div>
+    {% with a = pick, next_url = url_for('today_page', n=n) %}{% include "_card.html" %}{% endwith %}
   {% else %}
     <section class="empty">
       <p>Nothing to suggest right now — every account is reviewed, queued for later or snoozed. 🎉</p>
     </section>
   {% endif %}
 
-  <div class="pager">
+  {# Pinned to the bottom of the screen, so it never moves whatever the card's height. #}
+  <nav class="pager" aria-label="Today's accounts"><div class="pager-inner">
     {% if n > 1 %}
       <a class="btn ghost" href="{{ url_for('today_page', n=n - 1) }}">← Previous account</a>
     {% else %}
@@ -50,7 +44,7 @@
       <input type="hidden" name="n" value="{{ n }}">
       <button class="btn ghost">Next account →</button>
     </form>
-  </div>
+  </div></nav>
 
   {% if followups %}
     <h2>Follow up</h2>

@@ -127,10 +127,17 @@ kbd { font-size: .75rem; opacity: .75; border: 1px solid currentColor; border-ra
 .seg.deleted { background: var(--ok); }
 .seg.gone { background: var(--teal); }
 .seg.keep { background: var(--accent); }
-.today-slot { display: grid; }
-.today-slot > * { grid-area: 1 / 1; }
-.slot-ghost { visibility: hidden; pointer-events: none; }
-.pager { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin: 1rem 0; }
+.pager {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
+  background: var(--surface); border-top: 1px solid var(--border);
+  padding: .75rem 0 calc(.75rem + env(safe-area-inset-bottom));
+}
+.pager-inner {
+  max-width: 1040px; margin: 0 auto; padding: 0 1rem;
+  display: flex; align-items: center; justify-content: space-between; gap: .5rem;
+}
+/* Leave room so the pinned bar never covers the end of the page. */
+main:has(.pager) { padding-bottom: 7rem; }
 .pager .btn, .pager .muted { white-space: nowrap; }
 @media (max-width: 420px) { .pager .btn { padding: .5rem .6rem; font-size: .9rem; } }
 .btn.disabled { opacity: .45; cursor: default; }
