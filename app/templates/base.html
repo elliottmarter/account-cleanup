@@ -18,14 +18,27 @@
     </nav>
   </header>
   <main>
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% for category, message in messages %}
-        <div class="flash {{ category }}">{{ message }}</div>
-      {% endfor %}
-    {% endwith %}
+    {# Messages float over the page so they don't push the layout down. #}
+    <div class="toasts" role="status" aria-live="polite">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+          <div class="flash {{ category }}">
+            <span>{{ message }}</span>
+            <button type="button" class="toast-close" aria-label="Dismiss">×</button>
+          </div>
+        {% endfor %}
+      {% endwith %}
+    </div>
     {% block content %}{% endblock %}
   </main>
   <script>
+    // Messages: close on ×, and fade out on their own unless they're errors.
+    document.querySelectorAll(".toasts .flash").forEach((toast) => {
+      const close = () => { toast.classList.add("leaving"); setTimeout(() => toast.remove(), 300); };
+      toast.querySelector(".toast-close").addEventListener("click", close);
+      if (!toast.classList.contains("error")) setTimeout(close, 5000);
+    });
+
     // Copy buttons for the deletion-request email template (clipboard API needs HTTPS, so fall back).
     document.addEventListener("click", (e) => {
       const btn = e.target.closest("[data-copy]");

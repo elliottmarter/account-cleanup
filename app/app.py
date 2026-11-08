@@ -146,6 +146,12 @@ def ago(value):
     return f"{years} year{'s' if years != 1 else ''} ago"
 
 
+@app.template_filter("as_open")
+def as_open(account):
+    """Copy of an account row as if still To review (the card's tallest layout)."""
+    return {**dict(account), "status": "unreviewed"}
+
+
 @app.template_filter("weburl")
 def weburl(url):
     if not url or url.lower().startswith(("androidapp://", "iosapp://")):
@@ -192,6 +198,16 @@ def choose_next(conn, day):
         if row:
             return row["id"]
     return None
+
+
+def remaining_count(conn, day):
+    """Accounts that Next account could still suggest today (same rules as choose_next)."""
+    return conn.execute(
+        """SELECT COUNT(*) FROM accounts
+           WHERE status IN ('delete', 'unreviewed') AND (snoozed_until IS NULL OR snoozed_until <= ?)
+             AND id NOT IN (SELECT account_id FROM daily_picks WHERE day = ?)""",
+        (day, day),
+    ).fetchone()[0]
 
 
 def add_pick(conn, day):
@@ -266,7 +282,8 @@ def today_page():
         "today.html",
         pick=picks[n - 1] if picks else None,
         n=n,
-        pick_count=len(picks),
+        # Total to work through: today's suggestions so far plus everything still waiting.
+        pick_total=len(picks) + remaining_count(conn, today()),
         followups=followups,
         vault_cleanup=vault_cleanup,
         stats=get_stats(conn),

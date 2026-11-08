@@ -25,7 +25,14 @@
   <h1>Today <span class="muted">· {{ day.strftime('%A') }} {{ day.day }} {{ day.strftime('%B') }} · <b>{{ stats.processed_today }}</b> processed today</span></h1>
 
   {% if pick %}
-    {% with a = pick, next_url = url_for('today_page', n=n) %}{% include "_card.html" %}{% endwith %}
+    {# The invisible copy is the card in its tallest (open) state, so the slot - and the
+       Previous / Next buttons below it - stay put when an account is finished. #}
+    <div class="today-slot">
+      {% with a = pick, next_url = url_for('today_page', n=n) %}{% include "_card.html" %}{% endwith %}
+      <div class="slot-ghost" aria-hidden="true" inert>
+        {% with a = pick|as_open, next_url = '' %}{% include "_card.html" %}{% endwith %}
+      </div>
+    </div>
   {% else %}
     <section class="empty">
       <p>Nothing to suggest right now — every account is reviewed, queued for later or snoozed. 🎉</p>
@@ -38,7 +45,7 @@
     {% else %}
       <span class="btn ghost disabled" aria-disabled="true">← Previous account</span>
     {% endif %}
-    {% if pick_count %}<span class="muted">{{ n }} of {{ pick_count }}</span>{% endif %}
+    {% if pick %}<span class="muted">{{ n }} of {{ pick_total }}</span>{% endif %}
     <form method="post" action="{{ url_for('another_pick') }}">
       <input type="hidden" name="n" value="{{ n }}">
       <button class="btn ghost">Next account →</button>
@@ -63,9 +70,16 @@
 {% endblock %}
 {% block scripts %}
 <script>
-  // Hide a segment's label when it doesn't fit; the number and the hover title stay.
+  // Show every label if the whole bar fits that way; otherwise keep segments proportional
+  // and hide the labels that don't fit (the number and the hover title stay).
   function fitSegments() {
-    document.querySelectorAll(".seg span").forEach((label) => {
+    const bar = document.querySelector(".segbar");
+    if (!bar) return;
+    bar.querySelectorAll(".seg span").forEach((label) => { label.hidden = false; });
+    bar.classList.add("labelled");
+    if (bar.scrollWidth <= bar.clientWidth) return;
+    bar.classList.remove("labelled");
+    bar.querySelectorAll(".seg span").forEach((label) => {
       label.hidden = false;
       if (label.scrollWidth > label.clientWidth) label.hidden = true;
     });
