@@ -383,6 +383,21 @@ def change_status(account_id):
     return redirect(safe_next(url_for("today_page")))
 
 
+@app.post("/account/<int:account_id>/notes")
+def save_notes(account_id):
+    """Notes box under the Today card. Saved in the background before moving on, or with its Save button."""
+    conn = db.get_db()
+    get_account(conn, account_id)
+    conn.execute(
+        "UPDATE accounts SET notes = ? WHERE id = ?", (request.form.get("notes", "").strip(), account_id)
+    )
+    conn.commit()
+    if request.headers.get("X-Requested-With") == "fetch":
+        return "", 204
+    flash("Notes saved.", "success")
+    return redirect(safe_next(url_for("today_page")))
+
+
 @app.post("/account/<int:account_id>/snooze")
 def snooze(account_id):
     conn = db.get_db()

@@ -169,3 +169,6 @@ tr:last-child td { border-bottom: none; }
 .details dd { margin: 0; word-break: break-all; }
 .history { list-style: none; padding: 0; margin: 0; }
 .history li { padding: .3rem 0; border-bottom: 1px solid var(--border); }
+
+.notes-box label { display: block; font-weight: 600; margin-bottom: .4rem; }
+.notes-foot { display: flex; justify-content: space-between; align-items: center; gap: .5rem; margin-top: .5rem; }

@@ -20,7 +20,7 @@
     <span class="badge st-{{ a.status }}">{{ STATUSES[a.status] }}</span>
   </div>
 
-  {% if a.notes %}<p class="notes">{{ a.notes }}</p>{% endif %}
+  {% if a.notes and not hide_notes %}<p class="notes">{{ a.notes }}</p>{% endif %}
 
   {% if a.status in CLOSED %}
     <div class="done-row">

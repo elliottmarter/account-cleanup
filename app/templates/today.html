@@ -25,7 +25,17 @@
   <h1>Today <span class="muted">· {{ day.strftime('%A') }} {{ day.day }} {{ day.strftime('%B') }} · <b>{{ stats.processed_today }}</b> processed today</span></h1>
 
   {% if pick %}
-    {% with a = pick, next_url = url_for('today_page', n=n) %}{% include "_card.html" %}{% endwith %}
+    {% with a = pick, next_url = url_for('today_page', n=n), hide_notes = true %}{% include "_card.html" %}{% endwith %}
+    <form method="post" action="{{ url_for('save_notes', account_id=pick.id) }}" class="panel notes-box" id="notes-form">
+      <input type="hidden" name="next" value="{{ url_for('today_page', n=n) }}">
+      <label for="notes">Notes</label>
+      <textarea id="notes" name="notes" rows="4"
+                placeholder="Where things stand, e.g. emailed support 3 Nov, waiting on a reply">{{ pick.notes }}</textarea>
+      <div class="notes-foot">
+        <span class="muted small" id="notes-state">Saved automatically when you move on.</span>
+        <button class="btn small">Save notes</button>
+      </div>
+    </form>
   {% else %}
     <section class="empty">
       <p>Nothing to suggest right now — every account is reviewed, queued for later or snoozed. 🎉</p>
@@ -80,5 +90,41 @@
   }
   fitSegments();
   window.addEventListener("resize", fitSegments);
+
+  // Notes: if they've changed, save them before any other button or link on the page takes you away.
+  const notesForm = document.getElementById("notes-form");
+  if (notesForm) {
+    const box = notesForm.querySelector("textarea");
+    const state = document.getElementById("notes-state");
+    let saved = box.value;
+    box.addEventListener("input", () => {
+      state.textContent = box.value === saved ? "Saved automatically when you move on." : "Unsaved changes";
+    });
+    const saveNotes = () => box.value === saved ? Promise.resolve() :
+      fetch(notesForm.action, { method: "POST", body: new FormData(notesForm), headers: { "X-Requested-With": "fetch" } })
+        .then((r) => { if (r.ok) saved = box.value; });
+    document.addEventListener("submit", (e) => {
+      const form = e.target;
+      if (form === notesForm || box.value === saved || e.defaultPrevented) return;
+      e.preventDefault();
+      saveNotes().finally(() => {
+        // form.submit() skips submit handlers (no second confirm), so carry the clicked button's value by hand.
+        if (e.submitter && e.submitter.name) {
+          const field = Object.assign(document.createElement("input"),
+            { type: "hidden", name: e.submitter.name, value: e.submitter.value });
+          form.append(field);
+        }
+        saved = box.value;  // don't block the navigation even if the save failed
+        form.submit();
+      });
+    });
+    document.addEventListener("click", (e) => {
+      const link = e.target.closest("a[href]");
+      if (!link || link.target === "_blank" || box.value === saved) return;
+      e.preventDefault();
+      saveNotes().finally(() => { saved = box.value; location.href = link.href; });
+    });
+    window.addEventListener("beforeunload", (e) => { if (box.value !== saved) e.preventDefault(); });
+  }
 </script>
 {% endblock %}
