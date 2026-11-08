@@ -32,6 +32,7 @@
       <p class="muted">The vault locks itself after {{ bw.lock_minutes }} minutes without use, and whenever the container restarts.</p>
     {% else %}
       <form method="post" action="{{ url_for('bitwarden_unlock') }}" class="inline-form">
+        {% if request.args.get('next') %}<input type="hidden" name="next" value="{{ request.args.get('next') }}">{% endif %}
         <label>Master password
           <input type="password" name="master_password" autocomplete="current-password" required>
         </label>

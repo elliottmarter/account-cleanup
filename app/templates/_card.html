@@ -19,7 +19,9 @@
     <div class="done-row">
       <span>✓ Done{% if a.status_changed_at %} {{ a.status_changed_at|nicedate }}{% endif %}</span>
       {% if not a.vault_removed %}
-        {% if bw_enabled and a.vault_id %}
+        {% if bw_enabled and a.vault_id and not bw_unlocked() %}
+        <a class="btn small" href="{{ url_for('import_page', next=next_url) }}">🔒 Unlock vault to delete from Bitwarden</a>
+        {% elif bw_enabled and a.vault_id %}
         <form method="post" action="{{ url_for('vault_trash', account_id=a.id) }}"
               data-msg="Move {{ a.name }}{% if a.username %} ({{ a.username }}){% endif %} to the Bitwarden trash?"
               onsubmit="return confirm(this.dataset.msg);">
@@ -38,7 +40,6 @@
   {% else %}
     <div class="links">
       {% if a.url|weburl %}<a class="btn small ghost" href="{{ a.url|weburl }}" target="_blank" rel="noopener noreferrer">Open site ↗</a>{% endif %}
-      <a class="btn small ghost" href="{{ a|searchurl }}" target="_blank" rel="noopener noreferrer">How do I delete this? ↗</a>
     </div>
 
     <form method="post" action="{{ url_for('change_status', account_id=a.id) }}" class="actions">

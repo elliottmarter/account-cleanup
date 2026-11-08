@@ -59,13 +59,17 @@
 {% if bw_enabled and a.vault_id and not a.vault_removed %}
 <section class="panel">
   <h2>Bitwarden</h2>
-  <p class="muted">Moves this login to your Bitwarden trash. You can restore it from the trash for 30 days. The vault must be unlocked on the Import page.</p>
+  <p class="muted">Moves this login to your Bitwarden trash. You can restore it from the trash for 30 days.</p>
+  {% if not bw_unlocked() %}
+  <a class="btn" href="{{ url_for('import_page', next=url_for('account_detail', account_id=a.id)) }}">🔒 Unlock vault to delete from Bitwarden</a>
+  {% else %}
   <form method="post" action="{{ url_for('vault_trash', account_id=a.id) }}"
         data-msg="Move {{ a.name }}{% if a.username %} ({{ a.username }}){% endif %} to the Bitwarden trash?"
         onsubmit="return confirm(this.dataset.msg);">
     <input type="hidden" name="next" value="{{ url_for('account_detail', account_id=a.id) }}">
     <button class="btn danger">Delete from Bitwarden</button>
   </form>
+  {% endif %}
 </section>
 {% endif %}
 

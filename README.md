@@ -22,7 +22,7 @@ deleting the ones you no longer need — a little at a time.
 3. **Today**: the app suggests one account at a time. Do as many or as few as you like: click
    **Next account** for another. Accounts you queued for deletion
    come first, then unreviewed ones — oldest-touched first, since those are most likely forgotten.
-   Each card has a link to the site, a "how do I delete this?" search, and a GDPR erasure email template.
+   Each card has a link to the site and a GDPR erasure email template.
 4. **Track** each account as *To review → To delete → Deletion requested → Deleted* (or *Keeping* / *Site gone*).
    Requests older than 14 days resurface as follow-ups, and deleted accounts remind you to remove them
    from your password manager.

@@ -93,7 +93,9 @@ def status():
         except (BitwardenError, json.JSONDecodeError) as exc:
             return {"configured": True, "state": "error", "error": str(exc)}
     state = data.get("status", "unauthenticated")
-    if state == "unlocked" and not _session:
+    if state != "unlocked":
+        _forget_session()  # locked or logged out behind our back
+    elif not _session:
         state = "locked"  # the CLI may think it's unlocked, but we hold no key
     return {
         "configured": True,
@@ -142,10 +144,39 @@ def lock():
             pass
 
 
-def _require_session():
+def _forget_session():
+    global _session
+    with _lock:
+        _session = None
+
+
+def is_unlocked():
+    """Cheap check for page rendering: do we hold an unexpired unlock key? (No CLI call.)"""
+    with _lock:
+        _expire_if_idle()
+        return bool(_session)
+
+
+LOCKED_MESSAGE = "The vault is locked. Unlock it on the Import page first."
+
+
+def _require_session(verify=False):
+    """Return the unlock key, or raise if the vault is locked.
+
+    With verify=True, also ask the CLI, so a vault locked outside this process is caught
+    before anything is changed.
+    """
     _expire_if_idle()
     if not _session:
-        raise BitwardenError("The vault is locked. Unlock it on the Import page first.")
+        raise BitwardenError(LOCKED_MESSAGE)
+    if verify:
+        try:
+            state = json.loads(_run(["status"], session=_session) or "{}").get("status")
+        except json.JSONDecodeError:
+            state = None
+        if state != "unlocked":
+            _forget_session()
+            raise BitwardenError(LOCKED_MESSAGE)
     _touch()
     return _session
 
@@ -184,5 +215,11 @@ def fetch_logins():
 def trash_item(vault_id):
     """Move one item to the Bitwarden trash (restorable for 30 days)."""
     with _lock:
-        session = _require_session()
-        _run(["delete", "item", vault_id], session=session)
+        session = _require_session(verify=True)
+        try:
+            _run(["delete", "item", vault_id], session=session)
+        except BitwardenError as exc:
+            if "locked" in str(exc).lower():
+                _forget_session()
+                raise BitwardenError(LOCKED_MESSAGE) from None
+            raise

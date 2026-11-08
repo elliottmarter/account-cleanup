@@ -4,7 +4,6 @@ import os
 import secrets
 import threading
 from datetime import datetime, timedelta, timezone
-from urllib.parse import quote_plus
 from zoneinfo import ZoneInfo
 
 from urllib.parse import urlsplit
@@ -118,6 +117,7 @@ def inject_globals():
         "CLOSED": CLOSED,
         "nav_to_review": to_review,
         "bw_enabled": bitwarden.configured(),
+        "bw_unlocked": bitwarden.is_unlocked,
         "bw_last_sync": lambda: db.get_setting("bw_last_sync", ""),
     }
 
@@ -150,11 +150,6 @@ def weburl(url):
     if not url or url.lower().startswith(("androidapp://", "iosapp://")):
         return ""
     return url if "://" in url else "https://" + url
-
-
-@app.template_filter("searchurl")
-def searchurl(account):
-    return "https://duckduckgo.com/?q=" + quote_plus(f"how to delete {account['name']} account")
 
 
 # --- core actions ------------------------------------------------------------
@@ -436,7 +431,8 @@ def bitwarden_unlock():
         flash("Vault unlocked.", "success")
     except BitwardenError as exc:
         flash(f"Couldn't unlock: {exc}", "error")
-    return redirect(url_for("import_page"))
+        return redirect(url_for("import_page", next=request.form.get("next") or None))
+    return redirect(safe_next(url_for("import_page")))
 
 
 @app.post("/bitwarden/lock")
