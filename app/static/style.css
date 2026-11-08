@@ -10,7 +10,9 @@
   --warn: #e67700;
   --radius: 10px;
   --on-color: #ffffff;
-  --teal: #0c8599;
+  --blue: #1c7ed6;
+  --purple: #7048e8;
+  --grey: #868e96;
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -24,7 +26,9 @@
     --danger: #ff6b6b;
     --warn: #ffa94d;
     --on-color: #14161b;
-    --teal: #3bc9db;
+    --blue: #4dabf7;
+    --purple: #b197fc;
+    --grey: #adb5bd;
   }
 }
 
@@ -52,7 +56,6 @@ h3 a { color: inherit; text-decoration: none; }
 .topbar nav { display: flex; gap: .25rem; flex-wrap: wrap; }
 .topbar nav a { padding: .35rem .7rem; border-radius: 8px; color: var(--muted); text-decoration: none; }
 .topbar nav a.active, .topbar nav a:hover { background: var(--bg); color: var(--text); }
-.pill { background: var(--accent); color: #fff; border-radius: 99px; padding: 0 .45rem; font-size: .75rem; }
 
 main { max-width: 1040px; margin: 0 auto; padding: 0 1rem 4rem; }
 
@@ -82,33 +85,34 @@ main { max-width: 1040px; margin: 0 auto; padding: 0 1rem 4rem; }
 .btn.ok { background: var(--ok); border-color: var(--ok); color: var(--on-color); }
 .btn.danger { background: var(--danger); border-color: var(--danger); color: var(--on-color); }
 .btn.warn { background: var(--warn); border-color: var(--warn); color: var(--on-color); }
-kbd { font-size: .75rem; opacity: .75; border: 1px solid currentColor; border-radius: 4px; padding: 0 .3rem; margin-left: .3rem; }
+
+/* One colour per status, shared by the segmented bar, badges, card edges and status buttons. */
+.st-deleted { --st: var(--ok); }
+.st-gone { --st: var(--blue); }
+.st-requested { --st: var(--warn); }
+.st-delete { --st: var(--danger); }
+.st-keep { --st: var(--purple); }
+.st-unreviewed { --st: var(--grey); }
+.btn[class*="st-"] { background: var(--st); border-color: var(--st); color: var(--on-color); }
+.btn[class*="st-"].current { background: transparent; color: var(--st); cursor: default; filter: none; }
 
 .card, .panel, .stats, .empty {
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
   padding: 1.1rem 1.25rem; margin: 1rem 0;
 }
-.card { border-left: 4px solid var(--border); }
-.card.status-delete { border-left-color: var(--danger); }
-.card.status-requested { border-left-color: var(--warn); }
-.card.status-deleted, .card.status-gone, .card.status-keep { border-left-color: var(--ok); }
+.card { border-left: 4px solid var(--st, var(--border)); }
 .card-head { display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start; }
 .meta { display: flex; flex-wrap: wrap; gap: .25rem .9rem; color: var(--muted); font-size: .88rem; margin-top: .2rem; word-break: break-all; }
 .notes { white-space: pre-wrap; background: var(--bg); padding: .5rem .75rem; border-radius: 8px; }
 .links, .actions { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin-top: .8rem; }
-.actions.big .btn { padding: .8rem 1.4rem; font-size: 1.05rem; }
+.actions.triage { padding-top: .8rem; border-top: 1px dashed var(--border); }
+.actions.triage .muted { min-width: 6.5rem; }
 .done-row { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; margin-top: .8rem; color: var(--ok); }
 .empty { text-align: center; padding: 2rem; }
-.triage-card { padding: 1.5rem; }
-.triage-card h2 { margin-top: 0; font-size: 1.5rem; }
 
 .badge { font-size: .78rem; padding: .15rem .55rem; border-radius: 99px; background: var(--bg); border: 1px solid var(--border); white-space: nowrap; }
-.badge.delete { color: var(--danger); border-color: var(--danger); }
-.badge.requested { color: var(--warn); border-color: var(--warn); }
-.badge.deleted, .badge.gone, .badge.keep { color: var(--ok); border-color: var(--ok); }
+.badge[class*="st-"] { color: var(--st); border-color: var(--st); }
 
-.progress { height: 10px; background: var(--bg); border-radius: 99px; overflow: hidden; border: 1px solid var(--border); margin: .5rem 0; }
-.progress div { height: 100%; background: var(--ok); }
 .progress-label { display: flex; flex-wrap: wrap; gap: .5rem; align-items: baseline; }
 .segbar { display: flex; gap: 2px; height: 2rem; margin-top: .6rem; border-radius: 8px; overflow: hidden; }
 .seg {
@@ -121,12 +125,7 @@ kbd { font-size: .75rem; opacity: .75; border: 1px solid currentColor; border-ra
 .seg { justify-content: center; }
 .seg:has(span:not([hidden])) { justify-content: flex-start; }
 .seg:hover { filter: brightness(1.1); }
-.seg.unreviewed { background: var(--muted); }
-.seg.delete { background: var(--danger); }
-.seg.requested { background: var(--warn); }
-.seg.deleted { background: var(--ok); }
-.seg.gone { background: var(--teal); }
-.seg.keep { background: var(--accent); }
+.seg { background: var(--st); }
 .pager {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
   background: var(--surface); border-top: 1px solid var(--border);

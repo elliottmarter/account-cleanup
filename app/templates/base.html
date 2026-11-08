@@ -12,7 +12,6 @@
     <nav>
       {% set ep = request.endpoint %}
       <a href="{{ url_for('today_page') }}" class="{{ 'active' if ep == 'today_page' }}">Today</a>
-      <a href="{{ url_for('triage') }}" class="{{ 'active' if ep == 'triage' }}">Triage{% if nav_to_review %} <span class="pill">{{ nav_to_review }}</span>{% endif %}</a>
       <a href="{{ url_for('accounts') }}" class="{{ 'active' if ep in ('accounts', 'account_detail') }}">Accounts</a>
       <a href="{{ url_for('import_page') }}" class="{{ 'active' if ep == 'import_page' }}">Import</a>
     </nav>

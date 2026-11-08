@@ -46,7 +46,7 @@
           </td>
           <td class="small">{{ a.username }}</td>
           <td class="small">{{ a.folder }}</td>
-          <td><span class="badge {{ a.status }}">{{ STATUSES[a.status] }}</span>
+          <td><span class="badge st-{{ a.status }}">{{ STATUSES[a.status] }}</span>
             {% if a.status in CLOSED and not a.vault_removed %}<div class="muted small">still in vault</div>{% endif %}</td>
           <td class="small">{{ a.vault_updated|nicedate if a.vault_updated else '' }}</td>
         </tr>

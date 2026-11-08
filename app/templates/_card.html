@@ -1,5 +1,12 @@
 {# Expects: a (account row), next_url #}
-<article class="card status-{{ a.status }}">
+{% macro status_button(key, label) -%}
+  {% if a.status == key -%}
+    <span class="btn st-{{ key }} current" title="Current status">✓ {{ label }}</span>
+  {%- else -%}
+    <button name="status" value="{{ key }}" class="btn st-{{ key }}">{{ label }}</button>
+  {%- endif %}
+{%- endmacro %}
+<article class="card st-{{ a.status }}">
   <div class="card-head">
     <div>
       <h3><a href="{{ url_for('account_detail', account_id=a.id) }}">{{ a.name }}</a></h3>
@@ -10,7 +17,7 @@
         {% if a.vault_updated %}<span title="Last changed in your vault: {{ a.vault_updated|nicedate }}">last touched {{ a.vault_updated|ago }}</span>{% endif %}
       </div>
     </div>
-    <span class="badge {{ a.status }}">{{ STATUSES[a.status] }}</span>
+    <span class="badge st-{{ a.status }}">{{ STATUSES[a.status] }}</span>
   </div>
 
   {% if a.notes %}<p class="notes">{{ a.notes }}</p>{% endif %}
@@ -42,13 +49,19 @@
       {% if a.url|weburl %}<a class="btn small ghost" href="{{ a.url|weburl }}" target="_blank" rel="noopener noreferrer">Open site ↗</a>{% endif %}
     </div>
 
-    <form method="post" action="{{ url_for('change_status', account_id=a.id) }}" class="actions">
+    <form method="post" action="{{ url_for('change_status', account_id=a.id) }}">
       <input type="hidden" name="next" value="{{ next_url }}">
-      <button name="status" value="deleted" class="btn danger">I deleted it</button>
-      <button name="status" value="requested" class="btn warn">Requested deletion</button>
-      <button name="status" value="gone" class="btn">Site no longer exists</button>
-      <button name="status" value="keep" class="btn ok">Keep it</button>
-      {% if a.status != 'delete' %}<button name="status" value="delete" class="btn">Delete later</button>{% endif %}
+      <div class="actions">
+        {{ status_button('deleted', 'Account deleted') }}
+        {{ status_button('gone', 'Site gone') }}
+        {{ status_button('requested', 'Deletion requested') }}
+      </div>
+      <div class="actions triage">
+        <span class="muted small">Quick triage</span>
+        {{ status_button('delete', 'To delete') }}
+        {{ status_button('keep', 'Keeping') }}
+        {{ status_button('unreviewed', 'To review') }}
+      </div>
     </form>
 
     <details class="email">

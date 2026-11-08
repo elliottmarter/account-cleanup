@@ -9,8 +9,8 @@
   <form method="post" action="{{ url_for('change_status', account_id=a.id) }}" class="actions">
     <input type="hidden" name="next" value="{{ url_for('account_detail', account_id=a.id) }}">
     <span class="muted">Changed your mind?</span>
-    <button name="status" value="unreviewed" class="btn small ghost">Back to "To review"</button>
-    <button name="status" value="keep" class="btn small ghost">Keep it</button>
+    <button name="status" value="keep" class="btn small st-keep">Keeping</button>
+    <button name="status" value="unreviewed" class="btn small st-unreviewed">To review</button>
   </form>
 {% endif %}
 

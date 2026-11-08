@@ -15,16 +15,16 @@ import db
 from bitwarden import BitwardenError
 from importer import ExportError, parse_export, vault_record
 
+# In display order: the segmented bar, filters and buttons all follow it, each status with its own colour.
 STATUSES = {
-    "unreviewed": "To review",
-    "delete": "To delete",
-    "requested": "Deletion requested",
     "deleted": "Deleted",
     "gone": "Site gone",
+    "requested": "Deletion requested",
+    "delete": "To delete",
     "keep": "Keeping",
+    "unreviewed": "To review",
 }
 CLOSED = ("deleted", "gone")
-SEGMENT_ORDER = ("deleted", "gone", "requested", "delete", "unreviewed", "keep")
 
 # Oldest-touched accounts first: the longer since you changed it, the more likely it's forgotten.
 PICK_ORDER = "priority DESC, COALESCE(NULLIF(vault_updated, ''), imported_at) ASC, id ASC"
@@ -110,13 +110,9 @@ def same_origin_for_vault_actions():
 
 @app.context_processor
 def inject_globals():
-    to_review = db.get_db().execute(
-        "SELECT COUNT(*) FROM accounts WHERE status = 'unreviewed'"
-    ).fetchone()[0]
     return {
         "STATUSES": STATUSES,
         "CLOSED": CLOSED,
-        "nav_to_review": to_review,
         "bw_enabled": bitwarden.configured(),
         "bw_unlocked": bitwarden.is_unlocked,
         "bw_last_sync": lambda: db.get_setting("bw_last_sync", ""),
@@ -241,8 +237,7 @@ def get_stats(conn):
         "target": target,
         "pct": round(100 * done / target) if target else 0,
         "reviewed_pct": round(100 * (total - counts["unreviewed"]) / total) if total else 0,
-        # Segments of the progress bar, left to right: finished, in progress, untouched, kept.
-        "segments": [(key, STATUSES[key], counts[key]) for key in SEGMENT_ORDER if counts[key]],
+        "segments": [(key, label, counts[key]) for key, label in STATUSES.items() if counts[key]],
         "processed_today": conn.execute(
             "SELECT COUNT(DISTINCT account_id) FROM events WHERE day = ?", (today(),)
         ).fetchone()[0],
@@ -304,14 +299,8 @@ def another_pick():
 
 @app.get("/triage")
 def triage():
-    conn = db.get_db()
-    account = conn.execute(
-        f"""SELECT * FROM accounts WHERE status = 'unreviewed'
-            AND (snoozed_until IS NULL OR snoozed_until <= ?)
-            ORDER BY {PICK_ORDER} LIMIT 1""",
-        (today(),),
-    ).fetchone()
-    return render_template("triage.html", account=account, stats=get_stats(conn))
+    # Triage now happens on the Today page's cards; keep old links working.
+    return redirect(url_for("today_page"))
 
 
 @app.get("/accounts")
