@@ -7,10 +7,14 @@ from datetime import datetime, timedelta, timezone
 from urllib.parse import quote_plus
 from zoneinfo import ZoneInfo
 
+from urllib.parse import urlsplit
+
 from flask import Flask, Response, abort, flash, redirect, render_template, request, url_for
 
+import bitwarden
 import db
-from importer import ExportError, parse_export
+from bitwarden import BitwardenError
+from importer import ExportError, parse_export, vault_record
 
 STATUSES = {
     "unreviewed": "To review",
@@ -94,12 +98,29 @@ def require_auth():
     return Response("Login required", 401, {"WWW-Authenticate": 'Basic realm="Account Cleanup"'})
 
 
+@app.before_request
+def same_origin_for_vault_actions():
+    # The vault endpoints can delete passwords, so refuse POSTs another website triggers.
+    if request.method != "POST" or not request.path.startswith(("/bitwarden/", "/account/")):
+        return None
+    origin = request.headers.get("Origin") or request.headers.get("Referer")
+    if origin and origin != "null" and urlsplit(origin).netloc != request.host:
+        abort(403)
+    return None
+
+
 @app.context_processor
 def inject_globals():
     to_review = db.get_db().execute(
         "SELECT COUNT(*) FROM accounts WHERE status = 'unreviewed'"
     ).fetchone()[0]
-    return {"STATUSES": STATUSES, "CLOSED": CLOSED, "nav_to_review": to_review}
+    return {
+        "STATUSES": STATUSES,
+        "CLOSED": CLOSED,
+        "nav_to_review": to_review,
+        "bw_enabled": bitwarden.configured(),
+        "bw_last_sync": lambda: db.get_setting("bw_last_sync", ""),
+    }
 
 
 @app.template_filter("nicedate")
@@ -311,8 +332,9 @@ def accounts():
         where.append("snoozed_until > ?")
         params.append(today())
     if q:
-        where.append("(name LIKE ? OR domain LIKE ? OR username LIKE ? OR folder LIKE ? OR notes LIKE ?)")
-        params += [f"%{q}%"] * 5
+        where.append("(name LIKE ? OR domain LIKE ? OR username LIKE ? OR folder LIKE ?"
+                     " OR notes LIKE ? OR vault_notes LIKE ?)")
+        params += [f"%{q}%"] * 6
     sql = "SELECT * FROM accounts"
     if where:
         sql += " WHERE " + " AND ".join(where)
@@ -416,7 +438,111 @@ def remove_account(account_id):
 
 @app.get("/import")
 def import_page():
-    return render_template("import.html", stats=get_stats(db.get_db()))
+    return render_template(
+        "import.html",
+        stats=get_stats(db.get_db()),
+        bw=bitwarden.status(),
+        app_password_set=bool(APP_PASSWORD),
+    )
+
+
+# --- Bitwarden vault -----------------------------------------------------------
+
+@app.post("/bitwarden/unlock")
+def bitwarden_unlock():
+    try:
+        bitwarden.unlock(request.form.get("master_password", ""))
+        flash("Vault unlocked.", "success")
+    except BitwardenError as exc:
+        flash(f"Couldn't unlock: {exc}", "error")
+    return redirect(url_for("import_page"))
+
+
+@app.post("/bitwarden/lock")
+def bitwarden_lock():
+    bitwarden.lock()
+    flash("Vault locked.", "info")
+    return redirect(safe_next(url_for("import_page")))
+
+
+def link_or_insert(conn, r, stamp):
+    """Find the tracker row for a vault item: by vault id, then by site + username."""
+    row = conn.execute("SELECT id FROM accounts WHERE vault_id = ?", (r["vault_id"],)).fetchone()
+    if row is None:
+        row = conn.execute(
+            "SELECT id FROM accounts WHERE dedupe_key = ? AND vault_id IS NULL", (r["dedupe_key"],)
+        ).fetchone()
+    if row is not None:
+        conn.execute(
+            """UPDATE accounts SET vault_id = ?, name = ?, domain = ?, url = ?, username = ?, folder = ?,
+               vault_notes = ?, vault_created = COALESCE(?, vault_created),
+               vault_updated = COALESCE(?, vault_updated), vault_removed = 0 WHERE id = ?""",
+            (r["vault_id"], r["name"], r["domain"], r["url"], r["username"], r["folder"],
+             r["notes"], r["created"], r["updated"], row["id"]),
+        )
+        return False
+    key = r["dedupe_key"]
+    if conn.execute("SELECT 1 FROM accounts WHERE dedupe_key = ?", (key,)).fetchone():
+        key = f"{key}|{r['vault_id']}"  # same site + username twice in the vault
+    conn.execute(
+        """INSERT INTO accounts (dedupe_key, name, domain, url, username, folder, source,
+                                 vault_created, vault_updated, imported_at, vault_id, vault_notes)
+           VALUES (?, ?, ?, ?, ?, ?, 'bitwarden-sync', ?, ?, ?, ?, ?)""",
+        (key, r["name"], r["domain"], r["url"], r["username"], r["folder"],
+         r["created"], r["updated"], stamp, r["vault_id"], r["notes"]),
+    )
+    return True
+
+
+@app.post("/bitwarden/sync")
+def bitwarden_sync():
+    try:
+        items = bitwarden.fetch_logins()
+    except BitwardenError as exc:
+        flash(f"Sync failed: {exc}", "error")
+        return redirect(url_for("import_page"))
+
+    conn = db.get_db()
+    stamp = now_iso()
+    added = 0
+    seen = []
+    for item in items:
+        if not item["vault_id"]:
+            continue
+        added += link_or_insert(conn, vault_record(item), stamp)
+        seen.append(item["vault_id"])
+    # Items that disappeared from the vault (deleted elsewhere) count as removed from it.
+    placeholders = ",".join("?" * len(seen)) or "''"
+    gone = conn.execute(
+        f"""UPDATE accounts SET vault_removed = 1
+            WHERE vault_id IS NOT NULL AND vault_removed = 0 AND vault_id NOT IN ({placeholders})""",
+        seen,
+    ).rowcount
+    db.set_setting("bw_last_sync", stamp)
+    conn.commit()
+    msg = f"Synced {len(seen)} logins from Bitwarden: {added} new, {len(seen) - added} updated."
+    if gone:
+        msg += f" {gone} no longer in the vault."
+    flash(msg + " Passwords were not stored.", "success")
+    return redirect(url_for("import_page"))
+
+
+@app.post("/account/<int:account_id>/vault-trash")
+def vault_trash(account_id):
+    conn = db.get_db()
+    a = get_account(conn, account_id)
+    if not a["vault_id"]:
+        flash(f"{a['name']} isn't linked to a Bitwarden item. Sync from Bitwarden first.", "error")
+    else:
+        try:
+            bitwarden.trash_item(a["vault_id"])
+        except BitwardenError as exc:
+            flash(f"Couldn't delete {a['name']} from Bitwarden: {exc}", "error")
+        else:
+            conn.execute("UPDATE accounts SET vault_removed = 1 WHERE id = ?", (account_id,))
+            conn.commit()
+            flash(f"Moved {a['name']} to the Bitwarden trash. You can restore it there for 30 days.", "success")
+    return redirect(safe_next(url_for("account_detail", account_id=account_id)))
 
 
 @app.post("/import")

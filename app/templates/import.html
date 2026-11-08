@@ -3,6 +3,53 @@
 {% block content %}
 <h1>Import accounts</h1>
 
+<section class="panel" id="bitwarden">
+  <h2>Sync from Bitwarden</h2>
+  {% if not bw.configured %}
+    <p class="muted">
+      Pull your logins straight from your vault instead of uploading an export. Set
+      <code>BW_CLIENTID</code> and <code>BW_CLIENTSECRET</code> (your personal API key from
+      Bitwarden → <b>Settings → Security → Keys → View API key</b>) on the container, then restart it.
+    </p>
+  {% elif bw.state == 'error' %}
+    <div class="flash error">Bitwarden CLI error: {{ bw.error }}</div>
+  {% else %}
+    <p>
+      {% if bw.email %}<b>{{ bw.email }}</b> on {{ bw.server }}{% else %}{{ bw.server }}{% endif %} ·
+      {% if bw.state == 'unlocked' %}<span class="badge keep">Unlocked</span>
+      {% else %}<span class="badge unreviewed">Locked</span>{% endif %}
+      {% set last = bw_last_sync() %}{% if last %}<span class="muted"> · last synced {{ last|ago }}</span>{% endif %}
+    </p>
+    {% if bw.state == 'unlocked' %}
+      <div class="actions">
+        <form method="post" action="{{ url_for('bitwarden_sync') }}">
+          <button class="btn ok">Sync now</button>
+        </form>
+        <form method="post" action="{{ url_for('bitwarden_lock') }}">
+          <button class="btn ghost">Lock</button>
+        </form>
+      </div>
+      <p class="muted">The vault locks itself after {{ bw.lock_minutes }} minutes without use, and whenever the container restarts.</p>
+    {% else %}
+      <form method="post" action="{{ url_for('bitwarden_unlock') }}" class="inline-form">
+        <label>Master password
+          <input type="password" name="master_password" autocomplete="current-password" required>
+        </label>
+        <button class="btn">Unlock</button>
+      </form>
+      <p class="muted">Your master password is only used to unlock the vault and is never saved. The unlocked session is kept in memory only.</p>
+    {% endif %}
+    <p class="muted">
+      Sync copies each login's name, website, username, folder, dates and <b>notes</b>. Passwords, 2FA
+      codes and custom fields are discarded and never saved. Accounts you already track are matched by
+      site and username and keep their status.
+    </p>
+    {% if not app_password_set %}
+      <div class="flash error">No <code>APP_PASSWORD</code> is set, so anyone who can open this page can delete items from your vault while it's unlocked. Set one, or keep the vault locked when you're not using it.</div>
+    {% endif %}
+  {% endif %}
+</section>
+
 <section class="panel">
   <form method="post" enctype="multipart/form-data" class="stack">
     <label>Export file (.csv recommended, with password columns removed — see below)

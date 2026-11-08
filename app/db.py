@@ -24,7 +24,9 @@ CREATE TABLE IF NOT EXISTS accounts (
     vault_removed INTEGER NOT NULL DEFAULT 0,
     snoozed_until TEXT,
     imported_at TEXT NOT NULL,
-    status_changed_at TEXT
+    status_changed_at TEXT,
+    vault_id TEXT,
+    vault_notes TEXT NOT NULL DEFAULT ''
 );
 CREATE INDEX IF NOT EXISTS idx_accounts_status ON accounts(status);
 
@@ -76,6 +78,7 @@ def init_db():
     conn = connect()
     try:
         conn.executescript(SCHEMA)
+        migrate(conn)
         conn.execute("PRAGMA journal_mode = WAL")
         conn.execute(
             "INSERT OR IGNORE INTO settings (key, value) VALUES ('secret_key', ?)",
@@ -85,6 +88,23 @@ def init_db():
         return conn.execute("SELECT value FROM settings WHERE key = 'secret_key'").fetchone()[0]
     finally:
         conn.close()
+
+
+# Columns added after the first release: (name, definition)
+ADDED_COLUMNS = [
+    ("vault_id", "TEXT"),                            # Bitwarden item id, set by vault sync
+    ("vault_notes", "TEXT NOT NULL DEFAULT ''"),     # notes field from the vault item
+]
+
+
+def migrate(conn):
+    existing = {row[1] for row in conn.execute("PRAGMA table_info(accounts)")}
+    for name, definition in ADDED_COLUMNS:
+        if name not in existing:
+            conn.execute(f"ALTER TABLE accounts ADD COLUMN {name} {definition}")
+    conn.execute(
+        "CREATE UNIQUE INDEX IF NOT EXISTS idx_accounts_vault_id ON accounts(vault_id) WHERE vault_id IS NOT NULL"
+    )
 
 
 def get_setting(key, default=None):

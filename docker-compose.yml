@@ -11,6 +11,11 @@ services:
       # PGID: 1000
       # APP_USERNAME: admin        # optional login prompt - recommended if
       # APP_PASSWORD: change-me    # anyone else can reach this port
+      # Optional: sync from / delete in your Bitwarden vault (see README)
+      # BW_CLIENTID: user.xxxxxxxx
+      # BW_CLIENTSECRET: xxxxxxxx
+      # BW_SERVER: https://vault.bitwarden.eu   # EU cloud or your Vaultwarden URL
+      # BW_LOCK_MINUTES: 15
     volumes:
       - account-data:/data
     restart: unless-stopped

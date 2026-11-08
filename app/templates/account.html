@@ -24,6 +24,8 @@
     <dt>Last changed in vault</dt><dd>{{ a.vault_updated|nicedate }}</dd>
     <dt>Imported</dt><dd>{{ a.imported_at|nicedate }}</dd>
     {% if a.snoozed_until %}<dt>Snoozed until</dt><dd>{{ a.snoozed_until|nicedate }}</dd>{% endif %}
+    {% if a.vault_id %}<dt>Bitwarden</dt><dd>{{ 'Removed from vault' if a.vault_removed else 'Linked to vault item' }}</dd>{% endif %}
+    {% if a.vault_notes %}<dt>Vault notes</dt><dd class="vault-notes">{{ a.vault_notes }}</dd>{% endif %}
   </dl>
 
   <form method="post" action="{{ url_for('account_save', account_id=a.id) }}" class="stack">
@@ -54,6 +56,19 @@
     <p class="muted">No changes yet.</p>
   {% endif %}
 </section>
+
+{% if bw_enabled and a.vault_id and not a.vault_removed %}
+<section class="panel">
+  <h2>Bitwarden</h2>
+  <p class="muted">Moves this login to your Bitwarden trash. You can restore it from the trash for 30 days. The vault must be unlocked on the Import page.</p>
+  <form method="post" action="{{ url_for('vault_trash', account_id=a.id) }}"
+        data-msg="Move {{ a.name }}{% if a.username %} ({{ a.username }}){% endif %} to the Bitwarden trash?"
+        onsubmit="return confirm(this.dataset.msg);">
+    <input type="hidden" name="next" value="{{ url_for('account_detail', account_id=a.id) }}">
+    <button class="btn danger">Delete from Bitwarden</button>
+  </form>
+</section>
+{% endif %}
 
 <form method="post" action="{{ url_for('remove_account', account_id=a.id) }}"
       data-msg="Remove {{ a.name }} from the tracker? This only removes it from this app."

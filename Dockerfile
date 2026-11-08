@@ -1,3 +1,8 @@
+# Bitwarden CLI (needs Node 22+), built in its own stage and copied in below.
+FROM node:22-bookworm-slim AS bw
+ARG BW_CLI_VERSION=2026.10.0
+RUN npm install -g --omit=dev "@bitwarden/cli@${BW_CLI_VERSION}" && npm cache clean --force
+
 FROM python:3.12-slim
 
 LABEL org.opencontainers.image.title="Account Cleanup" \
@@ -9,6 +14,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     DATABASE_PATH=/data/accounts.db \
     PUID=1000 \
     PGID=1000
+
+COPY --from=bw /usr/local/bin/node /usr/local/bin/node
+COPY --from=bw /usr/local/lib/node_modules/@bitwarden/cli /usr/local/lib/node_modules/@bitwarden/cli
+RUN apt-get update     && apt-get install -y --no-install-recommends libstdc++6 ca-certificates     && rm -rf /var/lib/apt/lists/*     && ln -s /usr/local/lib/node_modules/@bitwarden/cli/build/bw.js /usr/local/bin/bw     && bw --version
 
 WORKDIR /app
 COPY requirements.txt .

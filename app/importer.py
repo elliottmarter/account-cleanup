@@ -137,6 +137,15 @@ def _parse_csv(text):
     return records
 
 
+def vault_record(item):
+    """Account record for an item from bitwarden.fetch_logins() (already stripped of secrets)."""
+    record = _record(item["name"], pick_url(item["uris"]), item["username"], item["folder"],
+                     item["created"], item["updated"])
+    record["vault_id"] = item["vault_id"]
+    record["notes"] = item["notes"]
+    return record
+
+
 def parse_export(filename, raw):
     """Return (records, source_label) for an uploaded export file."""
     text = raw.decode("utf-8-sig", errors="replace")

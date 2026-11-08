@@ -16,6 +16,8 @@ deleting the ones you no longer need — a little at a time.
    Only names, URLs, usernames, folders and dates are kept — passwords, 2FA seeds and notes are discarded.
    **Recommended:** export as `.csv` and delete the password columns yourself before uploading
    (see [Preparing your export](#preparing-your-export)).
+   **Or sync straight from Bitwarden** with an API key, and delete logins from your vault from inside the
+   app (see [Bitwarden sync](#bitwarden-sync-optional)).
 2. **Triage** (optional): rapid-fire Keep / Delete / Site gone, with keyboard shortcuts `K` `D` `G` `S`.
 3. **Today**: the app suggests one account per day (configurable). Accounts you queued for deletion
    come first, then unreviewed ones — oldest-touched first, since those are most likely forgotten.
@@ -76,10 +78,42 @@ Version tags such as `:1.0.0` are published for tagged releases, if you'd rather
 | `TZ` | `UTC` | Time zone used to decide when "today" changes |
 | `APP_PASSWORD` | *(unset)* | If set, the app asks for a login (HTTP basic auth) |
 | `APP_USERNAME` | `admin` | Username for the login prompt |
+| `BW_CLIENTID` / `BW_CLIENTSECRET` | *(unset)* | Bitwarden personal API key; turns on [Bitwarden sync](#bitwarden-sync-optional) |
+| `BW_SERVER` | bitwarden.com | `https://vault.bitwarden.eu` for the EU cloud, or your Vaultwarden URL |
+| `BW_LOCK_MINUTES` | `15` | Lock the vault again after this many idle minutes |
 | `PUID` / `PGID` | `1000` / `1000` | User and group the app runs as; `/data` is chowned to them on start (Unraid: `99` / `100`) |
 
 The app has no login by default. The tracker holds a list of your accounts and usernames, so set
 `APP_PASSWORD` (or keep the port on your LAN / behind a reverse proxy with auth) if anyone else can reach it.
+
+### Bitwarden sync (optional)
+
+Instead of uploading an export, the app can read your vault directly using the official
+[Bitwarden CLI](https://bitwarden.com/help/cli/), which is bundled in the image. It works with
+bitwarden.com, the EU cloud and Vaultwarden.
+
+1. In the Bitwarden web vault go to **Settings → Security → Keys → View API key** and copy the
+   `client_id` and `client_secret` into `BW_CLIENTID` and `BW_CLIENTSECRET` on the container.
+   (For the EU cloud or Vaultwarden, also set `BW_SERVER`.)
+2. Open **Import**, type your master password and click **Unlock**.
+3. Click **Sync now**. Each login's name, website, username, folder, dates and **notes** are copied in.
+   Accounts you already track (from an earlier import) are matched by site and username and keep their status.
+4. On an account's page, or on a finished card, **Delete from Bitwarden** moves that login to your
+   Bitwarden trash, where you can still restore it for 30 days.
+
+How it's handled:
+
+- The API key only logs the CLI in. Your vault stays encrypted until you unlock it with your master
+  password, which is passed straight to the CLI and never saved.
+- The unlocked session exists only in memory. It's dropped after `BW_LOCK_MINUTES` without use, when you
+  click **Lock**, or when the container restarts.
+- The CLI returns full items, passwords included, to the app's process. The app keeps only the fields
+  listed above and discards the rest straight away. Passwords, 2FA seeds and custom fields are never
+  written to the database. Notes **are** saved, so don't sync if your notes contain secrets.
+- The CLI keeps its login and an encrypted copy of the vault in `/data/bitwarden`, like any Bitwarden client.
+- While the vault is unlocked, anyone who can reach the app can delete vault items, so **set
+  `APP_PASSWORD`** and don't expose the port to the internet. Requests coming from other websites are refused.
+- Deleting only removes the entry from Bitwarden. It doesn't close the account on the website itself.
 
 ### Preparing your export
 

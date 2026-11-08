@@ -19,6 +19,14 @@
     <div class="done-row">
       <span>✓ Done{% if a.status_changed_at %} {{ a.status_changed_at|nicedate }}{% endif %}</span>
       {% if not a.vault_removed %}
+        {% if bw_enabled and a.vault_id %}
+        <form method="post" action="{{ url_for('vault_trash', account_id=a.id) }}"
+              data-msg="Move {{ a.name }}{% if a.username %} ({{ a.username }}){% endif %} to the Bitwarden trash?"
+              onsubmit="return confirm(this.dataset.msg);">
+          <input type="hidden" name="next" value="{{ next_url }}">
+          <button class="btn small danger">Delete from Bitwarden</button>
+        </form>
+        {% endif %}
         <form method="post" action="{{ url_for('vault_removed', account_id=a.id) }}">
           <input type="hidden" name="next" value="{{ next_url }}">
           <button class="btn small">I've removed it from my password manager</button>
