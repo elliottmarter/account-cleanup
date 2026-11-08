@@ -24,6 +24,7 @@ STATUSES = {
     "keep": "Keeping",
 }
 CLOSED = ("deleted", "gone")
+SEGMENT_ORDER = ("deleted", "gone", "requested", "delete", "unreviewed", "keep")
 
 # Oldest-touched accounts first: the longer since you changed it, the more likely it's forgotten.
 PICK_ORDER = "priority DESC, COALESCE(NULLIF(vault_updated, ''), imported_at) ASC, id ASC"
@@ -223,14 +224,6 @@ def get_stats(conn):
     done = counts["deleted"] + counts["gone"]
     target = total - counts["keep"]
 
-    active_days = {r["day"] for r in conn.execute("SELECT DISTINCT day FROM events")}
-    streak, d = 0, now().date()
-    if d.isoformat() not in active_days:
-        d -= timedelta(days=1)  # today isn't over yet, so don't break the streak
-    while d.isoformat() in active_days:
-        streak += 1
-        d -= timedelta(days=1)
-
     return {
         "counts": counts,
         "total": total,
@@ -238,7 +231,11 @@ def get_stats(conn):
         "target": target,
         "pct": round(100 * done / target) if target else 0,
         "reviewed_pct": round(100 * (total - counts["unreviewed"]) / total) if total else 0,
-        "streak": streak,
+        # Segments of the progress bar, left to right: finished, in progress, untouched, kept.
+        "segments": [(key, STATUSES[key], counts[key]) for key in SEGMENT_ORDER if counts[key]],
+        "processed_today": conn.execute(
+            "SELECT COUNT(DISTINCT account_id) FROM events WHERE day = ?", (today(),)
+        ).fetchone()[0],
     }
 
 
@@ -262,9 +259,14 @@ def today_page():
     vault_cleanup = conn.execute(
         "SELECT COUNT(*) FROM accounts WHERE status IN ('deleted', 'gone') AND vault_removed = 0"
     ).fetchone()[0]
+    picks = todays_picks(conn)
+    n = request.args.get("n", type=int) or len(picks)
+    n = max(1, min(n, len(picks))) if picks else 0
     return render_template(
         "today.html",
-        picks=todays_picks(conn),
+        pick=picks[n - 1] if picks else None,
+        n=n,
+        pick_count=len(picks),
         followups=followups,
         vault_cleanup=vault_cleanup,
         stats=get_stats(conn),
@@ -275,11 +277,18 @@ def today_page():
 
 @app.post("/today/another")
 def another_pick():
+    """Next account: step forward through today's suggestions, adding a new one at the end."""
     conn = db.get_db()
-    if add_pick(conn, today()) is None:
+    day = today()
+    count = conn.execute("SELECT COUNT(*) FROM daily_picks WHERE day = ?", (day,)).fetchone()[0]
+    n = request.form.get("n", type=int) or count
+    if n < count:
+        return redirect(url_for("today_page", n=n + 1))
+    if add_pick(conn, day) is None:
         flash("Nothing left to suggest - everything is reviewed, queued or snoozed.", "info")
+        return redirect(url_for("today_page", n=n))
     conn.commit()
-    return redirect(url_for("today_page"))
+    return redirect(url_for("today_page", n=count + 1))
 
 
 @app.get("/triage")

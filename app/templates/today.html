@@ -11,29 +11,39 @@
     <div class="progress-label">
       <strong>{{ stats.done }}</strong> of {{ stats.target }} accounts cleaned up
       <span class="muted">({{ stats.pct }}%)</span>
-      {% if stats.streak %}<span class="streak">🔥 {{ stats.streak }}-day streak</span>{% endif %}
     </div>
-    <div class="progress"><div style="width: {{ stats.pct }}%"></div></div>
-    <div class="chips">
-      {% for key, label in STATUSES.items() %}
-        <a class="chip {{ key }}" href="{{ url_for('accounts', status=key) }}"><b>{{ stats.counts[key] }}</b> {{ label }}</a>
+    <div class="segbar" role="list" aria-label="Accounts by status">
+      {% for key, label, count in stats.segments %}
+        <a class="seg {{ key }}" role="listitem" style="flex-grow: {{ count }}"
+           href="{{ url_for('accounts', status=key) }}" title="{{ count }} {{ label }}">
+          <b>{{ count }}</b> <span>{{ label }}</span>
+        </a>
       {% endfor %}
     </div>
   </section>
 
-  <h1>Today <span class="muted">· {{ day.strftime('%A') }} {{ day.day }} {{ day.strftime('%B') }}</span></h1>
+  <h1>Today <span class="muted">· {{ day.strftime('%A') }} {{ day.day }} {{ day.strftime('%B') }} · <b>{{ stats.processed_today }}</b> processed today</span></h1>
 
-  {% for a in picks %}
-    {% with next_url = url_for('today_page') %}{% include "_card.html" %}{% endwith %}
+  {% if pick %}
+    {% with a = pick, next_url = url_for('today_page', n=n) %}{% include "_card.html" %}{% endwith %}
   {% else %}
     <section class="empty">
       <p>Nothing to suggest right now — every account is reviewed, queued for later or snoozed. 🎉</p>
     </section>
-  {% endfor %}
+  {% endif %}
 
-  <form method="post" action="{{ url_for('another_pick') }}" class="center">
-    <button class="btn ghost">Next account</button>
-  </form>
+  <div class="pager">
+    {% if n > 1 %}
+      <a class="btn ghost" href="{{ url_for('today_page', n=n - 1) }}">← Previous account</a>
+    {% else %}
+      <span class="btn ghost disabled" aria-disabled="true">← Previous account</span>
+    {% endif %}
+    {% if pick_count %}<span class="muted">{{ n }} of {{ pick_count }}</span>{% endif %}
+    <form method="post" action="{{ url_for('another_pick') }}">
+      <input type="hidden" name="n" value="{{ n }}">
+      <button class="btn ghost">Next account →</button>
+    </form>
+  </div>
 
   {% if followups %}
     <h2>Follow up</h2>
@@ -50,4 +60,17 @@
     </div>
   {% endif %}
 {% endif %}
+{% endblock %}
+{% block scripts %}
+<script>
+  // Hide a segment's label when it doesn't fit; the number and the hover title stay.
+  function fitSegments() {
+    document.querySelectorAll(".seg span").forEach((label) => {
+      label.hidden = false;
+      if (label.scrollWidth > label.clientWidth) label.hidden = true;
+    });
+  }
+  fitSegments();
+  window.addEventListener("resize", fitSegments);
+</script>
 {% endblock %}
