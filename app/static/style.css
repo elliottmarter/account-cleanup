@@ -83,7 +83,7 @@ kbd { font-size: .75rem; opacity: .75; border: 1px solid currentColor; border-ra
 .card-head { display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start; }
 .meta { display: flex; flex-wrap: wrap; gap: .25rem .9rem; color: var(--muted); font-size: .88rem; margin-top: .2rem; word-break: break-all; }
 .notes { white-space: pre-wrap; background: var(--bg); padding: .5rem .75rem; border-radius: 8px; }
-.links, .actions, .snooze { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin-top: .8rem; }
+.links, .actions { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin-top: .8rem; }
 .actions.big .btn { padding: .8rem 1.4rem; font-size: 1.05rem; }
 .done-row { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; margin-top: .8rem; color: var(--ok); }
 .empty { text-align: center; padding: 2rem; }
@@ -104,7 +104,6 @@ kbd { font-size: .75rem; opacity: .75; border: 1px solid currentColor; border-ra
 
 details { margin-top: .8rem; }
 summary { cursor: pointer; color: var(--muted); }
-details.settings { margin-top: 2rem; }
 
 input, select, textarea {
   font: inherit; color: var(--text); background: var(--surface);

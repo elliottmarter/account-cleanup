@@ -19,7 +19,8 @@ deleting the ones you no longer need — a little at a time.
    **Or sync straight from Bitwarden** with an API key, and delete logins from your vault from inside the
    app (see [Bitwarden sync](#bitwarden-sync-optional)).
 2. **Triage** (optional): rapid-fire Keep / Delete / Site gone, with keyboard shortcuts `K` `D` `G` `S`.
-3. **Today**: the app suggests one account per day (configurable). Accounts you queued for deletion
+3. **Today**: the app suggests one account at a time. Do as many or as few as you like: click
+   **Next account** for another. Accounts you queued for deletion
    come first, then unreviewed ones — oldest-touched first, since those are most likely forgotten.
    Each card has a link to the site, a "how do I delete this?" search, and a GDPR erasure email template.
 4. **Track** each account as *To review → To delete → Deletion requested → Deleted* (or *Keeping* / *Site gone*).

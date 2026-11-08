@@ -62,11 +62,8 @@ def now_iso():
     return now().isoformat(timespec="seconds")
 
 
-def setting_int(key, default):
-    try:
-        return int(db.get_setting(key, default))
-    except (TypeError, ValueError):
-        return default
+# "Deletion requested" accounts resurface on Today after this many days.
+FOLLOW_UP_DAYS = 14
 
 
 def safe_next(default):
@@ -213,8 +210,7 @@ def todays_picks(conn):
     with _picks_lock:
         has_picks = conn.execute("SELECT 1 FROM daily_picks WHERE day = ?", (day,)).fetchone()
         if db.get_setting("picks_generated_for") != day or not has_picks:
-            for _ in range(setting_int("daily_count", 1)):
-                add_pick(conn, day)
+            add_pick(conn, day)
             db.set_setting("picks_generated_for", day)
             conn.commit()
     return conn.execute(
@@ -262,8 +258,7 @@ def healthz():
 @app.get("/")
 def today_page():
     conn = db.get_db()
-    follow_up_days = setting_int("follow_up_days", 14)
-    cutoff = (now() - timedelta(days=follow_up_days)).isoformat(timespec="seconds")
+    cutoff = (now() - timedelta(days=FOLLOW_UP_DAYS)).isoformat(timespec="seconds")
     followups = conn.execute(
         """SELECT * FROM accounts WHERE status = 'requested' AND status_changed_at <= ?
            ORDER BY status_changed_at""",
@@ -279,8 +274,7 @@ def today_page():
         vault_cleanup=vault_cleanup,
         stats=get_stats(conn),
         day=now(),
-        daily_count=setting_int("daily_count", 1),
-        follow_up_days=follow_up_days,
+        follow_up_days=FOLLOW_UP_DAYS,
     )
 
 
@@ -290,19 +284,6 @@ def another_pick():
     if add_pick(conn, today()) is None:
         flash("Nothing left to suggest - everything is reviewed, queued or snoozed.", "info")
     conn.commit()
-    return redirect(url_for("today_page"))
-
-
-@app.post("/settings")
-def save_settings():
-    for key, low, high in (("daily_count", 1, 20), ("follow_up_days", 1, 365)):
-        try:
-            value = max(low, min(high, int(request.form.get(key, ""))))
-        except ValueError:
-            continue
-        db.set_setting(key, value)
-    db.get_db().commit()
-    flash("Settings saved.", "success")
     return redirect(url_for("today_page"))
 
 

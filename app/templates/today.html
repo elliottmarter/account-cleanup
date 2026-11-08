@@ -32,7 +32,7 @@
   {% endfor %}
 
   <form method="post" action="{{ url_for('another_pick') }}" class="center">
-    <button class="btn ghost">On a roll? Give me another one</button>
+    <button class="btn ghost">Next account</button>
   </form>
 
   {% if followups %}
@@ -49,15 +49,5 @@
       <a href="{{ url_for('accounts', status='vault') }}">Review them</a>
     </div>
   {% endif %}
-
-  <details class="settings">
-    <summary>Settings</summary>
-    <form method="post" action="{{ url_for('save_settings') }}" class="inline-form">
-      <label>Accounts per day <input type="number" name="daily_count" min="1" max="20" value="{{ daily_count }}"></label>
-      <label>Follow up on requests after <input type="number" name="follow_up_days" min="1" max="365" value="{{ follow_up_days }}"> days</label>
-      <button class="btn small">Save</button>
-    </form>
-    <p class="muted">Changes to the daily count apply from tomorrow — use "Give me another" for more today.</p>
-  </details>
 {% endif %}
 {% endblock %}

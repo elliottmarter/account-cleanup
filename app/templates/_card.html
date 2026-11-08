@@ -49,13 +49,6 @@
       <button name="status" value="keep" class="btn ok">Keep it</button>
       {% if a.status != 'delete' %}<button name="status" value="delete" class="btn">Delete later</button>{% endif %}
     </form>
-    <form method="post" action="{{ url_for('snooze', account_id=a.id) }}" class="snooze">
-      <input type="hidden" name="next" value="{{ next_url }}">
-      <span class="muted">Not today:</span>
-      <button name="days" value="1" class="btn small ghost">Tomorrow</button>
-      <button name="days" value="7" class="btn small ghost">1 week</button>
-      <button name="days" value="30" class="btn small ghost">1 month</button>
-    </form>
 
     <details class="email">
       <summary>No delete button? Request deletion by email</summary>
