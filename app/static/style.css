@@ -101,15 +101,14 @@ kbd { font-size: .75rem; opacity: .75; border: 1px solid currentColor; border-ra
 .st-delete { --st: var(--danger); }
 .st-keep { --st: var(--purple); }
 .st-unreviewed { --st: var(--grey); }
+.st-vault { --st: var(--accent); }
 .btn[class*="st-"] { background: var(--st); border-color: var(--st); color: var(--on-color); }
 .btn[class*="st-"].current { background: transparent; color: var(--st); cursor: default; filter: none; }
-/* Account page: the other statuses are outlined, the current one is filled in and ringed. */
+/* Account page: the other statuses are outlined, the current one is filled in. */
 .status-picker .btn[class*="st-"] { background: transparent; color: var(--st); }
-.status-picker .btn[class*="st-"]:hover { background: var(--st); color: var(--on-color); filter: none; }
-.status-picker .btn[class*="st-"].current {
-  background: var(--st); color: var(--on-color); font-weight: 600;
-  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--st);
-}
+.status-picker .btn[class*="st-"]:hover,
+.status-picker .btn[class*="st-"].current { background: var(--st); color: var(--on-color); filter: none; }
+.status-picker .btn.toggle.current { cursor: pointer; }
 
 .card, .panel, .stats, .empty {
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);

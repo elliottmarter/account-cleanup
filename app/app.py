@@ -427,14 +427,11 @@ def account_save(account_id):
     conn = db.get_db()
     get_account(conn, account_id)
     conn.execute(
-        "UPDATE accounts SET notes = ?, vault_removed = ? WHERE id = ?",
-        (
-            request.form.get("notes", "").strip(),
-            1 if request.form.get("vault_removed") else 0,
-            account_id,
-        ),
+        "UPDATE accounts SET notes = ? WHERE id = ?", (request.form.get("notes", "").strip(), account_id)
     )
     conn.commit()
+    if request.headers.get("X-Requested-With") == "fetch":
+        return "", 204  # autosave from the account page
     flash("Saved.", "success")
     return redirect(url_for("account_detail", account_id=account_id))
 
@@ -485,9 +482,11 @@ def snooze(account_id):
 
 @app.post("/account/<int:account_id>/vault")
 def vault_removed(account_id):
+    """Mark an account as removed from the password manager, or (removed=0) undo that."""
     conn = db.get_db()
     get_account(conn, account_id)
-    conn.execute("UPDATE accounts SET vault_removed = 1 WHERE id = ?", (account_id,))
+    removed = 0 if request.form.get("removed") == "0" else 1
+    conn.execute("UPDATE accounts SET vault_removed = ? WHERE id = ?", (removed, account_id))
     conn.commit()
     return redirect(safe_next(url_for("today_page")))
 

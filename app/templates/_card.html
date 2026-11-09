@@ -34,7 +34,7 @@
         {% for key, label in STATUSES.items() %}
           {% set label = 'Account deleted' if key == 'deleted' else label %}
           {% if a.status == key %}
-            <span class="btn st-{{ key }} current" aria-current="true" title="Current status{% if a.status_changed_at %} since {{ a.status_changed_at|nicedate }}{% endif %}">✓ {{ label }}</span>
+            <span class="btn st-{{ key }} current" aria-current="true" title="Current status{% if a.status_changed_at %} since {{ a.status_changed_at|nicedate }}{% endif %}">{{ label }}</span>
           {% else %}
             <button name="status" value="{{ key }}" class="btn st-{{ key }}">{{ label }}</button>
           {% endif %}
@@ -44,11 +44,11 @@
 
     {% set closed = a.status in CLOSED %}
     {% set linked = bw_enabled and a.vault_id %}
-    {% if not a.vault_removed and (closed or linked) %}
-      <div class="actions">
-        {% if linked and not bw_unlocked() %}
+    <div class="actions status-picker">
+      {% if linked and not a.vault_removed %}
+        {% if not bw_unlocked() %}
         <a class="btn small" href="{{ url_for('import_page', next=next_url) }}">🔒 Unlock vault to delete from Bitwarden</a>
-        {% elif linked %}
+        {% else %}
         <form method="post" action="{{ url_for('vault_trash', account_id=a.id) }}"
               data-msg="Move {{ a.name }}{% if a.username %} ({{ a.username }}){% endif %} to the Bitwarden trash? You can restore it from the trash for 30 days."
               onsubmit="return confirm(this.dataset.msg);">
@@ -56,16 +56,15 @@
           <button class="btn small danger">Delete from Bitwarden</button>
         </form>
         {% endif %}
-        {% if closed %}
-        <form method="post" action="{{ url_for('vault_removed', account_id=a.id) }}">
-          <input type="hidden" name="next" value="{{ next_url }}">
-          <button class="btn small">I've removed it from my password manager</button>
-        </form>
-        {% endif %}
-      </div>
-    {% elif a.vault_removed and closed %}
-      <p class="muted small">Removed from vault</p>
-    {% endif %}
+      {% endif %}
+      {# A toggle: filled in once it's out of your password manager; click again to undo. #}
+      <form method="post" action="{{ url_for('vault_removed', account_id=a.id) }}">
+        <input type="hidden" name="next" value="{{ next_url }}">
+        <input type="hidden" name="removed" value="{{ 0 if a.vault_removed else 1 }}">
+        <button class="btn small st-vault toggle{{ ' current' if a.vault_removed }}" aria-pressed="{{ 'true' if a.vault_removed else 'false' }}"
+                {% if a.vault_removed %}title="Click to undo"{% endif %}>Removed from my password manager</button>
+      </form>
+    </div>
 
     {% if not closed %}
     <details class="email">

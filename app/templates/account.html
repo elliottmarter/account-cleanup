@@ -18,12 +18,11 @@
     {% if a.vault_id %}<dt>Bitwarden</dt><dd>{{ 'Removed from vault' if a.vault_removed else 'Linked to vault item' }}</dd>{% endif %}
   </dl>
 
-  <form method="post" action="{{ url_for('account_save', account_id=a.id) }}" class="stack">
+  <form method="post" action="{{ url_for('account_save', account_id=a.id) }}" class="stack" id="details-form">
     <label>Notes
       <textarea name="notes" rows="4" placeholder="e.g. emailed support 3 Nov, ticket #1234">{{ a.notes }}</textarea>
     </label>
-    <label class="check"><input type="checkbox" name="vault_removed" value="1" {{ 'checked' if a.vault_removed }}> Removed from my password manager</label>
-    <div><button class="btn">Save</button></div>
+    <span class="muted small" id="save-state" role="status" aria-live="polite">Changes save automatically.</span>
   </form>
 </section>
 
@@ -45,4 +44,65 @@
       onsubmit="return confirm(this.dataset.msg);">
   <button class="btn small ghost">Remove from tracker</button>
 </form>
+{% endblock %}
+{% block scripts %}
+<script>
+  // Notes save themselves: shortly after you stop typing, when you click away, and before any
+  // other button or link on the page takes you away.
+  const detailsForm = document.getElementById("details-form");
+  const state = document.getElementById("save-state");
+  const snapshot = () => new URLSearchParams(new FormData(detailsForm)).toString();
+  let saved = snapshot();
+  let timer = null;
+  let inFlight = Promise.resolve();
+
+  const save = () => {
+    clearTimeout(timer);
+    const body = snapshot();
+    if (body === saved) return inFlight;
+    state.textContent = "Saving…";
+    inFlight = fetch(detailsForm.action, {
+      method: "POST", body: new URLSearchParams(body), keepalive: true,
+      headers: { "X-Requested-With": "fetch" },
+    }).then((r) => {
+      if (!r.ok) throw new Error(r.status);
+      saved = body;
+      state.textContent = snapshot() === saved ? "Saved" : "Unsaved changes";
+    }).catch(() => {
+      state.textContent = "Couldn't save. Check you're still signed in and try again.";
+    });
+    return inFlight;
+  };
+
+  detailsForm.addEventListener("input", (e) => {
+    state.textContent = "Unsaved changes";
+    clearTimeout(timer);
+    timer = setTimeout(save, 800);
+  });
+  detailsForm.addEventListener("focusout", save);
+  detailsForm.addEventListener("submit", (e) => { e.preventDefault(); save(); });
+
+  // Save first, then carry on with whatever was clicked.
+  document.addEventListener("submit", (e) => {
+    const form = e.target;
+    if (form === detailsForm || snapshot() === saved || e.defaultPrevented) return;
+    e.preventDefault();
+    save().finally(() => {
+      // form.submit() skips submit handlers (no second confirm), so carry the clicked button's value by hand.
+      if (e.submitter && e.submitter.name) {
+        form.append(Object.assign(document.createElement("input"),
+          { type: "hidden", name: e.submitter.name, value: e.submitter.value }));
+      }
+      form.submit();
+    });
+  });
+  document.addEventListener("click", (e) => {
+    const link = e.target.closest("a[href]");
+    if (!link || link.target === "_blank" || snapshot() === saved) return;
+    e.preventDefault();
+    save().finally(() => { location.href = link.href; });
+  });
+  // Closing the tab or using the back button: send what's there (keepalive lets it finish).
+  window.addEventListener("pagehide", save);
+</script>
 {% endblock %}
