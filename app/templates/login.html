@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Sign in · Account Cleanup{% endblock %}
+{# Messages sit under the login box here instead of floating in the corner. #}
+{% block messages %}{% endblock %}
+{% block content %}
+<section class="panel login">
+  <h1>Sign in</h1>
+  <form method="post" action="{{ url_for('login_submit') }}" class="stack">
+    {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+    <label>Username
+      <input name="username" autocomplete="username" autocapitalize="none" spellcheck="false" required autofocus>
+    </label>
+    <label>Password
+      <input type="password" name="password" autocomplete="current-password" required>
+    </label>
+    <button class="btn ok">Sign in</button>
+  </form>
+</section>
+<div class="login-messages" role="status" aria-live="polite">
+  {% for category, message in get_flashed_messages(with_categories=true) %}
+    <div class="flash {{ category }}">{{ message }}</div>
+  {% endfor %}
+</div>
+{% endblock %}

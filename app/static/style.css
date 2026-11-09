@@ -56,6 +56,12 @@ h3 a { color: inherit; text-decoration: none; }
 .topbar nav { display: flex; gap: .25rem; flex-wrap: wrap; }
 .topbar nav a { padding: .35rem .7rem; border-radius: 8px; color: var(--muted); text-decoration: none; }
 .topbar nav a.active, .topbar nav a:hover { background: var(--bg); color: var(--text); }
+.topbar nav { align-items: center; }
+.nav-btn { font: inherit; cursor: pointer; border: 0; background: none; padding: .35rem .7rem; border-radius: 8px; color: var(--muted); }
+.nav-btn:hover { background: var(--bg); color: var(--text); }
+.panel.login { max-width: 22rem; margin: 4rem auto 0; padding: 1.5rem; }
+.login h1 { margin-top: 0; }
+.login-messages { max-width: 22rem; margin: 0 auto; text-align: center; }
 .pill { background: var(--accent); color: #fff; border-radius: 99px; padding: 0 .45rem; font-size: .75rem; }
 
 main { max-width: 1040px; margin: 0 auto; padding: 0 1rem 4rem; }

@@ -1,14 +1,17 @@
 import csv
+import hashlib
+import hmac
 import io
 import os
 import secrets
 import threading
+import time
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 from urllib.parse import urlsplit
 
-from flask import Flask, Response, abort, flash, redirect, render_template, request, url_for
+from flask import Flask, Response, abort, flash, redirect, render_template, request, session, url_for
 
 import bitwarden
 import db
@@ -46,8 +49,17 @@ app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 25 * 1024 * 1024
 app.secret_key = db.init_db()
 app.teardown_appcontext(db.close_db)
+# Stay signed in on this browser for a month. Lax keeps other websites from using the session.
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=30)
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 
 _picks_lock = threading.Lock()
+
+# Too many wrong passwords in a row pauses sign-in for a minute.
+LOGIN_MAX_FAILURES = 5
+LOGIN_LOCK_SECONDS = 60
+_login_failures = []
+_login_lock = threading.Lock()
 
 
 def now():
@@ -83,24 +95,70 @@ def parse_dt(value):
     return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
 
 
+def login_token():
+    """What a signed-in session carries. Changing the username or password signs everyone out."""
+    creds = f"{APP_USERNAME}\0{APP_PASSWORD}".encode()
+    return hmac.new(app.secret_key.encode(), creds, hashlib.sha256).hexdigest()
+
+
+def signed_in():
+    return secrets.compare_digest(session.get("auth", ""), login_token())
+
+
+def login_locked():
+    """True while there have been too many wrong passwords recently (from anyone)."""
+    cutoff = time.monotonic() - LOGIN_LOCK_SECONDS
+    with _login_lock:
+        _login_failures[:] = [t for t in _login_failures if t > cutoff]
+        return len(_login_failures) >= LOGIN_MAX_FAILURES
+
+
 @app.before_request
 def require_auth():
-    if request.path == "/healthz":
+    if request.endpoint in ("healthz", "static", "login", "login_submit") or signed_in():
         return None
-    auth = request.authorization
-    if (
-        auth
-        and secrets.compare_digest((auth.username or "").encode(), APP_USERNAME.encode())
-        and secrets.compare_digest((auth.password or "").encode(), APP_PASSWORD.encode())
-    ):
-        return None
-    return Response("Login required", 401, {"WWW-Authenticate": 'Basic realm="Account Cleanup"'})
+    if request.headers.get("X-Requested-With") == "fetch":
+        return Response("Login required", 401)
+    # Come back to the page that was asked for; a form sent while signed out just goes to the login page.
+    target = request.full_path.rstrip("?") if request.method == "GET" else "/"
+    return redirect(url_for("login", next=target if target != "/" else None))
+
+
+@app.get("/login")
+def login():
+    if signed_in():
+        return redirect(safe_next(url_for("today_page")))
+    return render_template("login.html", next=safe_next(""))
+
+
+@app.post("/login")
+def login_submit():
+    if login_locked():
+        flash("Too many wrong attempts. Wait a minute and try again.", "error")
+        return redirect(url_for("login", next=safe_next("") or None))
+    user_ok = secrets.compare_digest(request.form.get("username", "").encode(), APP_USERNAME.encode())
+    pass_ok = secrets.compare_digest(request.form.get("password", "").encode(), APP_PASSWORD.encode())
+    if not (user_ok and pass_ok):
+        with _login_lock:
+            _login_failures.append(time.monotonic())
+        flash("Wrong username or password.", "error")
+        return redirect(url_for("login", next=safe_next("") or None))
+    session.clear()
+    session["auth"] = login_token()
+    session.permanent = True
+    return redirect(safe_next(url_for("today_page")))
+
+
+@app.post("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("login"))
 
 
 @app.before_request
 def same_origin_for_vault_actions():
     # The vault endpoints can delete passwords, so refuse POSTs another website triggers.
-    if request.method != "POST" or not request.path.startswith(("/bitwarden/", "/account/")):
+    if request.method != "POST" or not request.path.startswith(("/bitwarden/", "/account/", "/login")):
         return None
     origin = request.headers.get("Origin") or request.headers.get("Referer")
     if origin and origin != "null" and urlsplit(origin).netloc != request.host:
@@ -114,6 +172,7 @@ def inject_globals():
         "SELECT COUNT(*) FROM accounts WHERE status = 'unreviewed'"
     ).fetchone()[0]
     return {
+        "signed_in": signed_in(),
         "STATUSES": STATUSES,
         "CLOSED": CLOSED,
         "nav_to_review": to_review,

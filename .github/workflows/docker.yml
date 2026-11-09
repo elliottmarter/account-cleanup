@@ -29,8 +29,11 @@ jobs:
             -e APP_USERNAME=smoke -e APP_PASSWORD=smoke-pass \
             -v "$RUNNER_TEMP/data:/data" account-cleanup:test
           for i in $(seq 1 30); do curl -fsS http://localhost:8080/healthz && break; sleep 1; done
-          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/)" = 401
-          curl -fsS -u smoke:smoke-pass http://localhost:8080/ | grep -q "Account Cleanup"
+          test "$(curl -s -o /dev/null -w '%{redirect_url}' http://localhost:8080/)" = http://localhost:8080/login
+          curl -fsS -c "$RUNNER_TEMP/jar" -d username=smoke -d password=wrong http://localhost:8080/login
+          test "$(curl -s -b "$RUNNER_TEMP/jar" -o /dev/null -w '%{http_code}' http://localhost:8080/)" = 302
+          curl -fsS -c "$RUNNER_TEMP/jar" -d username=smoke -d password=smoke-pass http://localhost:8080/login
+          curl -fsS -b "$RUNNER_TEMP/jar" http://localhost:8080/ | grep -q "Sign out"
           test "$(stat -c %u "$RUNNER_TEMP/data/accounts.db")" = 99
           docker logs smoke
           docker rm -f smoke

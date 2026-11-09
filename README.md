@@ -84,7 +84,7 @@ Version tags such as `:1.0.0` are published for tagged releases, if you'd rather
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `TZ` | `UTC` | Time zone used to decide when "today" changes |
-| `APP_USERNAME` | **required** | Username for the web UI login (HTTP basic auth) |
+| `APP_USERNAME` | **required** | Username for the web UI login |
 | `APP_PASSWORD` | **required** | Password for the web UI login. The container won't start without both |
 | `BW_CLIENTID` / `BW_CLIENTSECRET` | *(unset)* | Bitwarden personal API key; turns on [Bitwarden sync](#bitwarden-sync-optional) |
 | `BW_SERVER` | bitwarden.com | `https://vault.bitwarden.eu` for the EU cloud, or your Vaultwarden URL |
@@ -92,8 +92,9 @@ Version tags such as `:1.0.0` are published for tagged releases, if you'd rather
 | `PUID` / `PGID` | `1000` / `1000` | User and group the app runs as; `/data` is chowned to them on start (Unraid: `99` / `100`) |
 
 A login is always required, because the tracker holds a list of your accounts and usernames and, with
-Bitwarden sync, can delete vault items. Basic auth isn't encrypted on its own, so keep the port on your
-LAN or put it behind a reverse proxy with HTTPS.
+Bitwarden sync, can delete vault items. You sign in on the app's own login page and stay signed in on
+that browser for 30 days, or until you click **Sign out** or change the username or password. The login
+isn't encrypted on its own, so keep the port on your LAN or put it behind a reverse proxy with HTTPS.
 
 ### Bitwarden sync (optional)
 
