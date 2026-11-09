@@ -56,6 +56,7 @@ h3 a { color: inherit; text-decoration: none; }
 .topbar nav { display: flex; gap: .25rem; flex-wrap: wrap; }
 .topbar nav a { padding: .35rem .7rem; border-radius: 8px; color: var(--muted); text-decoration: none; }
 .topbar nav a.active, .topbar nav a:hover { background: var(--bg); color: var(--text); }
+.pill { background: var(--accent); color: #fff; border-radius: 99px; padding: 0 .45rem; font-size: .75rem; }
 
 main { max-width: 1040px; margin: 0 auto; padding: 0 1rem 4rem; }
 
@@ -85,6 +86,7 @@ main { max-width: 1040px; margin: 0 auto; padding: 0 1rem 4rem; }
 .btn.ok { background: var(--ok); border-color: var(--ok); color: var(--on-color); }
 .btn.danger { background: var(--danger); border-color: var(--danger); color: var(--on-color); }
 .btn.warn { background: var(--warn); border-color: var(--warn); color: var(--on-color); }
+kbd { font-size: .75rem; opacity: .75; border: 1px solid currentColor; border-radius: 4px; padding: 0 .3rem; margin-left: .3rem; }
 
 /* One colour per status, shared by the segmented bar, badges, card edges and status buttons. */
 .st-deleted { --st: var(--ok); }
@@ -105,14 +107,17 @@ main { max-width: 1040px; margin: 0 auto; padding: 0 1rem 4rem; }
 .meta { display: flex; flex-wrap: wrap; gap: .25rem .9rem; color: var(--muted); font-size: .88rem; margin-top: .2rem; word-break: break-all; }
 .notes { white-space: pre-wrap; background: var(--bg); padding: .5rem .75rem; border-radius: 8px; }
 .links, .actions { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin-top: .8rem; }
-.actions.triage { padding-top: .8rem; border-top: 1px dashed var(--border); }
-.actions.triage .muted { min-width: 6.5rem; }
 .done-row { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; margin-top: .8rem; color: var(--ok); }
 .empty { text-align: center; padding: 2rem; }
+.actions.big .btn { padding: .8rem 1.4rem; font-size: 1.05rem; }
+.triage-card { padding: 1.5rem; }
+.triage-card h2 { margin-top: 0; font-size: 1.5rem; }
 
 .badge { font-size: .78rem; padding: .15rem .55rem; border-radius: 99px; background: var(--bg); border: 1px solid var(--border); white-space: nowrap; }
 .badge[class*="st-"] { color: var(--st); border-color: var(--st); }
 
+.progress { height: 10px; background: var(--bg); border-radius: 99px; overflow: hidden; border: 1px solid var(--border); margin: .5rem 0; }
+.progress div { height: 100%; background: var(--ok); }
 .progress-label { display: flex; flex-wrap: wrap; gap: .5rem; align-items: baseline; }
 .segbar { display: flex; gap: 2px; height: 2rem; margin-top: .6rem; border-radius: 8px; overflow: hidden; }
 .seg {

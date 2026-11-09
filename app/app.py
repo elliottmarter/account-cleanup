@@ -110,9 +110,13 @@ def same_origin_for_vault_actions():
 
 @app.context_processor
 def inject_globals():
+    to_review = db.get_db().execute(
+        "SELECT COUNT(*) FROM accounts WHERE status = 'unreviewed'"
+    ).fetchone()[0]
     return {
         "STATUSES": STATUSES,
         "CLOSED": CLOSED,
+        "nav_to_review": to_review,
         "bw_enabled": bitwarden.configured(),
         "bw_unlocked": bitwarden.is_unlocked,
         "bw_last_sync": lambda: db.get_setting("bw_last_sync", ""),
@@ -299,8 +303,14 @@ def another_pick():
 
 @app.get("/triage")
 def triage():
-    # Triage now happens on the Today page's cards; keep old links working.
-    return redirect(url_for("today_page"))
+    conn = db.get_db()
+    account = conn.execute(
+        f"""SELECT * FROM accounts WHERE status = 'unreviewed'
+            AND (snoozed_until IS NULL OR snoozed_until <= ?)
+            ORDER BY {PICK_ORDER} LIMIT 1""",
+        (today(),),
+    ).fetchone()
+    return render_template("triage.html", account=account, stats=get_stats(conn))
 
 
 @app.get("/accounts")
