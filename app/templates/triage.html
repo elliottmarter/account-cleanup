@@ -5,9 +5,14 @@
 <p class="muted">
   Quickly sort accounts into keep or delete. Nothing gets deleted here — accounts you mark
   "Delete" are queued and suggested on the Today page one at a time.
-  {{ stats.reviewed_pct }}% reviewed, {{ stats.counts.unreviewed }} to go.
 </p>
-<div class="progress"><div style="width: {{ stats.reviewed_pct }}%"></div></div>
+<section class="stats">
+  <div class="progress-label">
+    <strong>{{ stats.reviewed_pct }}%</strong> reviewed
+    <span class="muted">({{ stats.counts.unreviewed }} to go)</span>
+  </div>
+  {% include "_segbar.html" %}
+</section>
 
 {% if account %}
   <article class="card triage-card">
@@ -26,11 +31,8 @@
       <input type="hidden" name="next" value="{{ url_for('triage') }}">
       <button name="status" value="keep" class="btn st-keep" data-key="k">Keep <kbd>K</kbd></button>
       <button name="status" value="delete" class="btn st-delete" data-key="d">Delete <kbd>D</kbd></button>
-      <button name="status" value="gone" class="btn st-gone" data-key="g">Site gone <kbd>G</kbd></button>
-    </form>
-    <form method="post" action="{{ url_for('snooze', account_id=account.id) }}" class="actions">
-      <input type="hidden" name="next" value="{{ url_for('triage') }}">
-      <button name="days" value="7" class="btn ghost" data-key="s">Not sure — ask me next week <kbd>S</kbd></button>
+      <button name="days" value="7" formaction="{{ url_for('snooze', account_id=account.id) }}"
+              class="btn st-unreviewed" data-key="s" title="Ask me again next week">Not sure <kbd>S</kbd></button>
     </form>
   </article>
 {% else %}

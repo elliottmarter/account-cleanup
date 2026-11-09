@@ -116,8 +116,6 @@ kbd { font-size: .75rem; opacity: .75; border: 1px solid currentColor; border-ra
 .badge { font-size: .78rem; padding: .15rem .55rem; border-radius: 99px; background: var(--bg); border: 1px solid var(--border); white-space: nowrap; }
 .badge[class*="st-"] { color: var(--st); border-color: var(--st); }
 
-.progress { height: 10px; background: var(--bg); border-radius: 99px; overflow: hidden; border: 1px solid var(--border); margin: .5rem 0; }
-.progress div { height: 100%; background: var(--ok); }
 .progress-label { display: flex; flex-wrap: wrap; gap: .5rem; align-items: baseline; }
 .segbar { display: flex; gap: 2px; height: 2rem; margin-top: .6rem; border-radius: 8px; overflow: hidden; }
 .seg {

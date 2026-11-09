@@ -1,0 +1,27 @@
+{# Expects: stats. The segmented bar of accounts by status, shared by Today and Triage. #}
+<div class="segbar" role="list" aria-label="Accounts by status">
+  {% for key, label, count in stats.segments %}
+    <a class="seg st-{{ key }}" role="listitem" style="flex-grow: {{ count }}"
+       href="{{ url_for('accounts', status=key) }}" title="{{ count }} {{ label }}">
+      <b>{{ count }}</b> <span>{{ label }}</span>
+    </a>
+  {% endfor %}
+</div>
+<script>
+  // Show every label if the whole bar fits that way; otherwise keep segments proportional
+  // and hide the labels that don't fit (the number and the hover title stay).
+  function fitSegments() {
+    const bar = document.querySelector(".segbar");
+    if (!bar) return;
+    bar.querySelectorAll(".seg span").forEach((label) => { label.hidden = false; });
+    bar.classList.add("labelled");
+    if (bar.scrollWidth <= bar.clientWidth) return;
+    bar.classList.remove("labelled");
+    bar.querySelectorAll(".seg span").forEach((label) => {
+      label.hidden = false;
+      if (label.scrollWidth > label.clientWidth) label.hidden = true;
+    });
+  }
+  fitSegments();
+  window.addEventListener("resize", fitSegments);
+</script>

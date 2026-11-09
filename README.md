@@ -18,7 +18,7 @@ deleting the ones you no longer need — a little at a time.
    (see [Preparing your export](#preparing-your-export)).
    **Or sync straight from Bitwarden** with an API key, and delete logins from your vault from inside the
    app (see [Bitwarden sync](#bitwarden-sync-optional)).
-2. **Triage** (optional): rapid-fire Keep / Delete / Site gone, with keyboard shortcuts `K` `D` `G` `S`.
+2. **Triage** (optional): rapid-fire Keep / Delete / Not sure, with keyboard shortcuts `K` `D` `S`.
 3. **Today**: the app suggests one account at a time. Do as many or as few as you like: click
    **Next account** for another. Accounts you queued for deletion
    come first, then unreviewed ones — oldest-touched first, since those are most likely forgotten.

@@ -12,14 +12,7 @@
       <strong>{{ stats.done }}</strong> of {{ stats.target }} accounts cleaned up
       <span class="muted">({{ stats.pct }}%)</span>
     </div>
-    <div class="segbar" role="list" aria-label="Accounts by status">
-      {% for key, label, count in stats.segments %}
-        <a class="seg st-{{ key }}" role="listitem" style="flex-grow: {{ count }}"
-           href="{{ url_for('accounts', status=key) }}" title="{{ count }} {{ label }}">
-          <b>{{ count }}</b> <span>{{ label }}</span>
-        </a>
-      {% endfor %}
-    </div>
+    {% include "_segbar.html" %}
   </section>
 
   <h1>Today <span class="muted">· {{ day.strftime('%A') }} {{ day.day }} {{ day.strftime('%B') }} · <b>{{ stats.processed_today }}</b> processed today</span></h1>
@@ -74,23 +67,6 @@
 {% endblock %}
 {% block scripts %}
 <script>
-  // Show every label if the whole bar fits that way; otherwise keep segments proportional
-  // and hide the labels that don't fit (the number and the hover title stay).
-  function fitSegments() {
-    const bar = document.querySelector(".segbar");
-    if (!bar) return;
-    bar.querySelectorAll(".seg span").forEach((label) => { label.hidden = false; });
-    bar.classList.add("labelled");
-    if (bar.scrollWidth <= bar.clientWidth) return;
-    bar.classList.remove("labelled");
-    bar.querySelectorAll(".seg span").forEach((label) => {
-      label.hidden = false;
-      if (label.scrollWidth > label.clientWidth) label.hidden = true;
-    });
-  }
-  fitSegments();
-  window.addEventListener("resize", fitSegments);
-
   // Notes: if they've changed, save them before any other button or link on the page takes you away.
   const notesForm = document.getElementById("notes-form");
   if (notesForm) {
