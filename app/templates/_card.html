@@ -1,4 +1,4 @@
-{# Expects: a (account row), next_url #}
+{# Expects: a (account row), next_url. Optional: hide_notes, detail (the account page's layout). #}
 {% macro status_button(key, label) -%}
   {% if a.status == key -%}
     <span class="btn st-{{ key }} current" title="Current status">✓ {{ label }}</span>
@@ -17,12 +17,73 @@
         {% if a.vault_updated %}<span title="Last changed in your vault: {{ a.vault_updated|nicedate }}">last touched {{ a.vault_updated|ago }}</span>{% endif %}
       </div>
     </div>
-    <span class="badge st-{{ a.status }}">{{ STATUSES[a.status] }}</span>
+    {% if not detail %}<span class="badge st-{{ a.status }}">{{ STATUSES[a.status] }}</span>{% endif %}
   </div>
 
   {% if a.notes and not hide_notes %}<p class="notes">{{ a.notes }}</p>{% endif %}
 
-  {% if a.status in CLOSED %}
+  {% if detail %}
+    {# Account page: every status is one click away, and the current one is filled in. #}
+    <div class="links">
+      {% if a.url|weburl %}<a class="btn small ghost" href="{{ a.url|weburl }}" target="_blank" rel="noopener noreferrer">Open site ↗</a>{% endif %}
+    </div>
+
+    <form method="post" action="{{ url_for('change_status', account_id=a.id) }}">
+      <input type="hidden" name="next" value="{{ next_url }}">
+      <div class="actions status-picker" role="group" aria-label="Status">
+        {% for key, label in STATUSES.items() %}
+          {% set label = 'Account deleted' if key == 'deleted' else label %}
+          {% if a.status == key %}
+            <span class="btn st-{{ key }} current" aria-current="true" title="Current status{% if a.status_changed_at %} since {{ a.status_changed_at|nicedate }}{% endif %}">✓ {{ label }}</span>
+          {% else %}
+            <button name="status" value="{{ key }}" class="btn st-{{ key }}">{{ label }}</button>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </form>
+
+    {% set closed = a.status in CLOSED %}
+    {% set linked = bw_enabled and a.vault_id %}
+    {% if not a.vault_removed and (closed or linked) %}
+      <div class="actions">
+        {% if linked and not bw_unlocked() %}
+        <a class="btn small" href="{{ url_for('import_page', next=next_url) }}">🔒 Unlock vault to delete from Bitwarden</a>
+        {% elif linked %}
+        <form method="post" action="{{ url_for('vault_trash', account_id=a.id) }}"
+              data-msg="Move {{ a.name }}{% if a.username %} ({{ a.username }}){% endif %} to the Bitwarden trash? You can restore it from the trash for 30 days."
+              onsubmit="return confirm(this.dataset.msg);">
+          <input type="hidden" name="next" value="{{ next_url }}">
+          <button class="btn small danger">Delete from Bitwarden</button>
+        </form>
+        {% endif %}
+        {% if closed %}
+        <form method="post" action="{{ url_for('vault_removed', account_id=a.id) }}">
+          <input type="hidden" name="next" value="{{ next_url }}">
+          <button class="btn small">I've removed it from my password manager</button>
+        </form>
+        {% endif %}
+      </div>
+    {% elif a.vault_removed and closed %}
+      <p class="muted small">Removed from vault</p>
+    {% endif %}
+
+    {% if not closed %}
+    <details class="email">
+      <summary>No delete button? Request deletion by email</summary>
+      <p class="muted">Send this to the site's support or privacy contact (often privacy@, dpo@ or support@ the domain).</p>
+      <textarea id="email-{{ a.id }}" rows="10" readonly>Subject: Request to delete my account and personal data
+
+Hello,
+
+I would like my {{ a.name }} account{% if a.username %} registered to "{{ a.username }}"{% endif %} to be closed, and all personal data you hold about me to be erased, under Article 17 of the UK/EU General Data Protection Regulation (right to erasure).
+
+Please confirm in writing once this has been completed.
+
+Thank you.</textarea>
+      <button type="button" class="btn small" data-copy="email-{{ a.id }}">Copy</button>
+    </details>
+    {% endif %}
+  {% elif a.status in CLOSED %}
     <div class="done-row">
       <span>✓ Done{% if a.status_changed_at %} {{ a.status_changed_at|nicedate }}{% endif %}</span>
       {% if not a.vault_removed %}

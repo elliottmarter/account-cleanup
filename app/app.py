@@ -30,7 +30,7 @@ STATUSES = {
 CLOSED = ("deleted", "gone")
 
 # Oldest-touched accounts first: the longer since you changed it, the more likely it's forgotten.
-PICK_ORDER = "priority DESC, COALESCE(NULLIF(vault_updated, ''), imported_at) ASC, id ASC"
+PICK_ORDER = "COALESCE(NULLIF(vault_updated, ''), imported_at) ASC, id ASC"
 
 SORTS = {
     "name": "name COLLATE NOCASE",
@@ -426,12 +426,10 @@ def account_detail(account_id):
 def account_save(account_id):
     conn = db.get_db()
     get_account(conn, account_id)
-    priority = request.form.get("priority", type=int, default=0)
     conn.execute(
-        "UPDATE accounts SET notes = ?, priority = ?, vault_removed = ? WHERE id = ?",
+        "UPDATE accounts SET notes = ?, vault_removed = ? WHERE id = ?",
         (
             request.form.get("notes", "").strip(),
-            max(0, min(2, priority)),
             1 if request.form.get("vault_removed") else 0,
             account_id,
         ),

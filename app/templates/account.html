@@ -3,16 +3,7 @@
 {% block content %}
 <p><a href="{{ url_for('accounts') }}">← All accounts</a></p>
 
-{% with next_url = url_for('account_detail', account_id=a.id) %}{% include "_card.html" %}{% endwith %}
-
-{% if a.status in CLOSED %}
-  <form method="post" action="{{ url_for('change_status', account_id=a.id) }}" class="actions">
-    <input type="hidden" name="next" value="{{ url_for('account_detail', account_id=a.id) }}">
-    <span class="muted">Changed your mind?</span>
-    <button name="status" value="keep" class="btn small st-keep">Keeping</button>
-    <button name="status" value="unreviewed" class="btn small st-unreviewed">To review</button>
-  </form>
-{% endif %}
+{% with next_url = url_for('account_detail', account_id=a.id), detail = true %}{% include "_card.html" %}{% endwith %}
 
 <section class="panel">
   <h2>Details</h2>
@@ -31,13 +22,6 @@
     <label>Notes
       <textarea name="notes" rows="4" placeholder="e.g. emailed support 3 Nov, ticket #1234">{{ a.notes }}</textarea>
     </label>
-    <label>Priority
-      <select name="priority">
-        <option value="0" {{ 'selected' if a.priority == 0 }}>Normal</option>
-        <option value="1" {{ 'selected' if a.priority == 1 }}>High — suggest sooner</option>
-        <option value="2" {{ 'selected' if a.priority == 2 }}>Urgent — suggest next</option>
-      </select>
-    </label>
     <label class="check"><input type="checkbox" name="vault_removed" value="1" {{ 'checked' if a.vault_removed }}> Removed from my password manager</label>
     <div><button class="btn">Save</button></div>
   </form>
@@ -55,23 +39,6 @@
     <p class="muted">No changes yet.</p>
   {% endif %}
 </section>
-
-{% if bw_enabled and a.vault_id and not a.vault_removed %}
-<section class="panel">
-  <h2>Bitwarden</h2>
-  <p class="muted">Moves this login to your Bitwarden trash. You can restore it from the trash for 30 days.</p>
-  {% if not bw_unlocked() %}
-  <a class="btn" href="{{ url_for('import_page', next=url_for('account_detail', account_id=a.id)) }}">🔒 Unlock vault to delete from Bitwarden</a>
-  {% else %}
-  <form method="post" action="{{ url_for('vault_trash', account_id=a.id) }}"
-        data-msg="Move {{ a.name }}{% if a.username %} ({{ a.username }}){% endif %} to the Bitwarden trash?"
-        onsubmit="return confirm(this.dataset.msg);">
-    <input type="hidden" name="next" value="{{ url_for('account_detail', account_id=a.id) }}">
-    <button class="btn danger">Delete from Bitwarden</button>
-  </form>
-  {% endif %}
-</section>
-{% endif %}
 
 <form method="post" action="{{ url_for('remove_account', account_id=a.id) }}"
       data-msg="Remove {{ a.name }} from the tracker? This only removes it from this app."
