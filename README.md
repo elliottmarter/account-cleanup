@@ -10,7 +10,7 @@
 A small self-hosted web app for working through your old online accounts and
 deleting the ones you no longer need — a little at a time.
 
-<img width="877" height="788" alt="image" src="https://github.com/user-attachments/assets/aac9ae19-365c-4166-addd-c1aea8fe2a87" />
+![Today: one suggested account at a time, with the status bar above](docs/screenshots/today.png)
 
 1. **Import** a Bitwarden export (`.json` or `.csv`; other password managers' CSVs work too).
    Only names, URLs, usernames, folders and dates are kept — passwords, 2FA seeds and notes are discarded.
@@ -27,6 +27,10 @@ deleting the ones you no longer need — a little at a time.
 4. **Track** each account as *To review → To delete → Deletion requested → Deleted* (or *Keeping* / *Site gone*).
    Requests older than 14 days resurface as follow-ups, and deleted accounts remind you to remove them
    from your password manager.
+
+| Triage | Accounts |
+| --- | --- |
+| ![Triage: Keep, Delete or Not sure](docs/screenshots/triage.png) | ![Accounts: search, filter and bulk-update](docs/screenshots/accounts.png) |
 
 ## Run it
 
