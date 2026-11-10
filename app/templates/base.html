@@ -44,13 +44,42 @@
       if (!toast.classList.contains("error")) setTimeout(close, 5000);
     });
 
+    // Deletion-request email: slide in when a status change reveals it, and slide out before one hides it.
+    // The status buttons reload the page, so the previous state is passed along in sessionStorage.
+    const emailKey = (id) => "email-was-" + id;
+    const store = (fn) => { try { return fn(sessionStorage); } catch (_) { return null; } };
+    document.querySelectorAll(".email[data-account]").forEach((box) => {
+      const key = emailKey(box.dataset.account);
+      if (store((s) => s.getItem(key)) === "0") box.classList.add("slide-in");
+      store((s) => s.removeItem(key));
+    });
+    document.addEventListener("submit", (e) => {
+      const form = e.target;
+      const m = /\/account\/(\d+)\/status$/.exec(form.getAttribute("action") || "");
+      if (!m || form.dataset.sliding) return;
+      const box = document.querySelector('.email[data-account="' + m[1] + '"]');
+      const hides = ["keep", "unreviewed", "deleted", "gone"].includes(e.submitter && e.submitter.value);
+      store((s) => s.setItem(emailKey(m[1]), box ? "1" : "0"));
+      if (!box || !hides || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      e.preventDefault();
+      form.dataset.sliding = "1";
+      const field = document.createElement("input");
+      field.type = "hidden"; field.name = e.submitter.name; field.value = e.submitter.value;
+      form.appendChild(field);
+      box.classList.add("slide-out");
+      let sent = false;
+      const go = () => { if (!sent) { sent = true; form.submit(); } };
+      box.addEventListener("animationend", go);
+      setTimeout(go, 500);
+    });
+
     // Copy buttons for the deletion-request email template (clipboard API needs HTTPS, so fall back).
     document.addEventListener("click", (e) => {
       const btn = e.target.closest("[data-copy]");
       if (!btn) return;
       const field = document.getElementById(btn.dataset.copy);
       field.select();
-      const done = () => { btn.textContent = "Copied"; setTimeout(() => (btn.textContent = "Copy"), 1500); };
+      const done = () => { btn.classList.add("copied"); setTimeout(() => btn.classList.remove("copied"), 1500); };
       if (navigator.clipboard && window.isSecureContext) {
         navigator.clipboard.writeText(field.value).then(done);
       } else if (document.execCommand("copy")) {

@@ -6,14 +6,34 @@
     <button name="status" value="{{ key }}" class="btn st-{{ key }}">{{ label }}</button>
   {%- endif %}
 {%- endmacro %}
+{% macro email_request() -%}
+<div class="email" data-account="{{ a.id }}">
+  <h4>Request deletion by email</h4>
+  <div class="copylabel">Email subject</div>
+  <div class="copybox">
+    <button type="button" class="copy-icon" data-copy="email-subject-{{ a.id }}" title="Copy subject" aria-label="Copy subject"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M10.5 5.5v-2a1.5 1.5 0 0 0-1.5-1.5h-5A1.5 1.5 0 0 0 2.5 3.5v5A1.5 1.5 0 0 0 4 10h1.5"/></svg></button>
+    <textarea id="email-subject-{{ a.id }}" rows="1" readonly aria-label="Subject">Request to delete my account and personal data</textarea>
+  </div>
+  <div class="copylabel">Email body</div>
+  <div class="copybox">
+    <button type="button" class="copy-icon" data-copy="email-{{ a.id }}" title="Copy email" aria-label="Copy email"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M10.5 5.5v-2a1.5 1.5 0 0 0-1.5-1.5h-5A1.5 1.5 0 0 0 2.5 3.5v5A1.5 1.5 0 0 0 4 10h1.5"/></svg></button>
+    <textarea id="email-{{ a.id }}" rows="9" readonly aria-label="Email body">Hello,
+
+I would like my {{ a.name }} account{% if a.username %} registered to "{{ a.username }}"{% endif %} to be closed, and all personal data you hold about me to be erased, under Article 17 of the UK/EU General Data Protection Regulation (right to erasure).
+
+Please confirm in writing once this has been completed.
+
+Thank you.</textarea>
+  </div>
+</div>
+{%- endmacro %}
 <article class="card st-{{ a.status }}">
   <div class="card-head">
     <div>
-      <h3><a href="{{ url_for('account_detail', account_id=a.id) }}">{{ a.name }}</a></h3>
+      <h3{% if detail %} class="title-lg"{% endif %}><a href="{{ url_for('account_detail', account_id=a.id) }}">{{ a.name }}</a></h3>
       <div class="meta">
-        {% if a.domain %}<span>{{ a.domain }}</span>{% endif %}
+        {% if a.domain %}<span>{% if a.url|weburl %}<a href="{{ a.url|weburl }}" target="_blank" rel="noopener noreferrer">{{ a.domain }}</a>{% else %}{{ a.domain }}{% endif %}</span>{% endif %}
         {% if a.username %}<span>{{ a.username }}</span>{% endif %}
-        {% if a.folder %}<span>📁 {{ a.folder }}</span>{% endif %}
         {% if a.vault_updated %}<span title="Last changed in your vault: {{ a.vault_updated|nicedate }}">last touched {{ a.vault_updated|ago }}</span>{% endif %}
       </div>
     </div>
@@ -24,17 +44,13 @@
 
   {% if detail %}
     {# Account page: every status is one click away, and the current one is filled in. #}
-    <div class="links">
-      {% if a.url|weburl %}<a class="btn small ghost" href="{{ a.url|weburl }}" target="_blank" rel="noopener noreferrer">Open site ↗</a>{% endif %}
-    </div>
-
     <form method="post" action="{{ url_for('change_status', account_id=a.id) }}">
       <input type="hidden" name="next" value="{{ next_url }}">
       <div class="actions status-picker" role="group" aria-label="Status">
         {% for key, label in STATUSES.items() %}
           {% set label = 'Account deleted' if key == 'deleted' else label %}
           {% if a.status == key %}
-            <span class="btn st-{{ key }} current" aria-current="true" title="Current status{% if a.status_changed_at %} since {{ a.status_changed_at|nicedate }}{% endif %}">{{ label }}</span>
+            <span class="btn st-{{ key }} current" aria-current="true" title="Current status{% if a.status_changed_at %} since {{ a.status_changed_at|nicedate }}{% endif %}">✓ {{ label }}</span>
           {% else %}
             <button name="status" value="{{ key }}" class="btn st-{{ key }}">{{ label }}</button>
           {% endif %}
@@ -62,25 +78,12 @@
         <input type="hidden" name="next" value="{{ next_url }}">
         <input type="hidden" name="removed" value="{{ 0 if a.vault_removed else 1 }}">
         <button class="btn small st-vault toggle{{ ' current' if a.vault_removed }}" aria-pressed="{{ 'true' if a.vault_removed else 'false' }}"
-                {% if a.vault_removed %}title="Click to undo"{% endif %}>Removed from my password manager</button>
+                {% if a.vault_removed %}title="Click to undo"{% endif %}>{% if a.vault_removed %}✓ {% endif %}Removed from my password manager</button>
       </form>
     </div>
 
-    {% if not closed %}
-    <details class="email">
-      <summary>No delete button? Request deletion by email</summary>
-      <p class="muted">Send this to the site's support or privacy contact (often privacy@, dpo@ or support@ the domain).</p>
-      <textarea id="email-{{ a.id }}" rows="10" readonly>Subject: Request to delete my account and personal data
-
-Hello,
-
-I would like my {{ a.name }} account{% if a.username %} registered to "{{ a.username }}"{% endif %} to be closed, and all personal data you hold about me to be erased, under Article 17 of the UK/EU General Data Protection Regulation (right to erasure).
-
-Please confirm in writing once this has been completed.
-
-Thank you.</textarea>
-      <button type="button" class="btn small" data-copy="email-{{ a.id }}">Copy</button>
-    </details>
+    {% if not closed and a.status not in ("keep", "unreviewed") %}
+    {{ email_request() }}
     {% endif %}
   {% elif a.status in CLOSED %}
     <div class="done-row">
@@ -105,10 +108,6 @@ Thank you.</textarea>
       {% endif %}
     </div>
   {% else %}
-    <div class="links">
-      {% if a.url|weburl %}<a class="btn small ghost" href="{{ a.url|weburl }}" target="_blank" rel="noopener noreferrer">Open site ↗</a>{% endif %}
-    </div>
-
     <form method="post" action="{{ url_for('change_status', account_id=a.id) }}">
       <input type="hidden" name="next" value="{{ next_url }}">
       <div class="actions">
@@ -118,19 +117,6 @@ Thank you.</textarea>
       </div>
     </form>
 
-    <details class="email">
-      <summary>No delete button? Request deletion by email</summary>
-      <p class="muted">Send this to the site's support or privacy contact (often privacy@, dpo@ or support@ the domain).</p>
-      <textarea id="email-{{ a.id }}" rows="10" readonly>Subject: Request to delete my account and personal data
-
-Hello,
-
-I would like my {{ a.name }} account{% if a.username %} registered to "{{ a.username }}"{% endif %} to be closed, and all personal data you hold about me to be erased, under Article 17 of the UK/EU General Data Protection Regulation (right to erasure).
-
-Please confirm in writing once this has been completed.
-
-Thank you.</textarea>
-      <button type="button" class="btn small" data-copy="email-{{ a.id }}">Copy</button>
-    </details>
+    {% if a.status not in ("keep", "unreviewed") %}{{ email_request() }}{% endif %}
   {% endif %}
 </article>

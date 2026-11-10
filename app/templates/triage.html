@@ -20,7 +20,6 @@
     <div class="meta">
       {% if account.domain %}<span>{{ account.domain }}</span>{% endif %}
       {% if account.username %}<span>{{ account.username }}</span>{% endif %}
-      {% if account.folder %}<span>📁 {{ account.folder }}</span>{% endif %}
       {% if account.vault_updated %}<span>last touched {{ account.vault_updated|ago }}</span>{% endif %}
     </div>
     {% if account.url|weburl %}

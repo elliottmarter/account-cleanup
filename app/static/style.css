@@ -42,7 +42,9 @@ body {
 a { color: var(--accent); }
 h1 { font-size: 1.6rem; margin: 1.5rem 0 1rem; }
 h2 { font-size: 1.2rem; margin: 1.5rem 0 .5rem; }
+h2.details-title { font-size: 1.6rem; margin-top: 0; }
 h3 { margin: 0; font-size: 1.15rem; }
+h3.title-lg { font-size: 1.6rem; }
 h3 a { color: inherit; text-decoration: none; }
 .muted { color: var(--muted); font-weight: normal; }
 .small { font-size: .85rem; }
@@ -104,10 +106,6 @@ kbd { font-size: .75rem; opacity: .75; border: 1px solid currentColor; border-ra
 .st-vault { --st: var(--accent); }
 .btn[class*="st-"] { background: var(--st); border-color: var(--st); color: var(--on-color); }
 .btn[class*="st-"].current { background: transparent; color: var(--st); cursor: default; filter: none; }
-/* Account page: the other statuses are outlined, the current one is filled in. */
-.status-picker .btn[class*="st-"] { background: transparent; color: var(--st); }
-.status-picker .btn[class*="st-"]:hover,
-.status-picker .btn[class*="st-"].current { background: var(--st); color: var(--on-color); filter: none; }
 .status-picker .btn.toggle.current { cursor: pointer; }
 
 .card, .panel, .stats, .empty {
@@ -158,6 +156,27 @@ main:has(.pager) { padding-bottom: 7rem; }
 
 details { margin-top: .8rem; }
 summary { cursor: pointer; color: var(--muted); }
+
+.email { margin-top: 1rem; }
+.email.slide-in { animation: email-slide .35s ease-out; }
+.email.slide-out { animation: email-slide .3s ease-in reverse forwards; }
+@keyframes email-slide {
+  from { max-height: 0; opacity: 0; margin-top: 0; overflow: hidden; }
+  to { max-height: 30rem; opacity: 1; margin-top: 1rem; overflow: hidden; }
+}
+@media (prefers-reduced-motion: reduce) { .email.slide-in, .email.slide-out { animation: none; } }
+.email h4 { margin: 0 0 .2rem; font-size: 1rem; }
+.copylabel { margin-top: .6rem; font-size: .8rem; color: var(--muted); }
+.copylabel + .copybox { margin-top: .2rem; }
+.copybox { position: relative; margin-top: .5rem; }
+.copybox textarea { padding-left: 2.4rem; resize: none; }
+.copy-icon {
+  position: absolute; top: .4rem; left: .4rem; z-index: 1;
+  display: grid; place-items: center; width: 1.7rem; height: 1.7rem; padding: 0;
+  background: transparent; color: var(--muted); border: 0; border-radius: 6px; cursor: pointer;
+}
+.copy-icon:hover { background: var(--border); color: var(--text); }
+.copy-icon.copied { color: #2a9d4b; }
 
 input, select, textarea {
   font: inherit; color: var(--text); background: var(--surface);

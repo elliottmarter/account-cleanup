@@ -409,7 +409,6 @@ def bulk_update():
         for account_id in ids:
             set_status(conn, account_id, status)
         conn.commit()
-        flash(f"Marked {len(ids)} account{'s' if len(ids) != 1 else ''} as '{STATUSES[status]}'.", "success")
     return redirect(safe_next(url_for("accounts")))
 
 
@@ -432,7 +431,6 @@ def account_save(account_id):
     conn.commit()
     if request.headers.get("X-Requested-With") == "fetch":
         return "", 204  # autosave from the account page
-    flash("Saved.", "success")
     return redirect(url_for("account_detail", account_id=account_id))
 
 
@@ -442,8 +440,6 @@ def change_status(account_id):
     status = request.form.get("status", "")
     set_status(conn, account_id, status)
     conn.commit()
-    name = get_account(conn, account_id)["name"]
-    flash(f"{name}: {STATUSES[status]}.", "success")
     return redirect(safe_next(url_for("today_page")))
 
 
@@ -458,7 +454,6 @@ def save_notes(account_id):
     conn.commit()
     if request.headers.get("X-Requested-With") == "fetch":
         return "", 204
-    flash("Notes saved.", "success")
     return redirect(safe_next(url_for("today_page")))
 
 
@@ -476,7 +471,6 @@ def snooze(account_id):
     if removed:
         add_pick(conn, day)  # swap in a replacement for today's suggestion
     conn.commit()
-    flash(f"Snoozed for {days} day{'s' if days != 1 else ''}.", "info")
     return redirect(safe_next(url_for("today_page")))
 
 
@@ -497,7 +491,6 @@ def remove_account(account_id):
     name = get_account(conn, account_id)["name"]
     conn.execute("DELETE FROM accounts WHERE id = ?", (account_id,))
     conn.commit()
-    flash(f"Removed {name} from the tracker.", "info")
     return redirect(url_for("accounts"))
 
 
@@ -518,7 +511,6 @@ def import_page():
 def bitwarden_unlock():
     try:
         bitwarden.unlock(request.form.get("master_password", ""))
-        flash("Vault unlocked.", "success")
     except BitwardenError as exc:
         flash(f"Couldn't unlock: {exc}", "error")
         return redirect(url_for("import_page", next=request.form.get("next") or None))
@@ -528,7 +520,6 @@ def bitwarden_unlock():
 @app.post("/bitwarden/lock")
 def bitwarden_lock():
     bitwarden.lock()
-    flash("Vault locked.", "info")
     return redirect(safe_next(url_for("import_page")))
 
 

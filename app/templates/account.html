@@ -6,13 +6,10 @@
 {% with next_url = url_for('account_detail', account_id=a.id), detail = true %}{% include "_card.html" %}{% endwith %}
 
 <section class="panel">
-  <h2>Details</h2>
+  <h2 class="details-title">Details</h2>
   <dl class="details">
     <dt>URL</dt><dd>{% if a.url|weburl %}<a href="{{ a.url|weburl }}" target="_blank" rel="noopener noreferrer">{{ a.url }}</a>{% else %}{{ a.url or '—' }}{% endif %}</dd>
     <dt>Username</dt><dd>{{ a.username or '—' }}</dd>
-    <dt>Folder</dt><dd>{{ a.folder or '—' }}</dd>
-    <dt>Created in vault</dt><dd>{{ a.vault_created|nicedate }}</dd>
-    <dt>Last changed in vault</dt><dd>{{ a.vault_updated|nicedate }}</dd>
     <dt>Imported</dt><dd>{{ a.imported_at|nicedate }}</dd>
     {% if a.snoozed_until %}<dt>Snoozed until</dt><dd>{{ a.snoozed_until|nicedate }}</dd>{% endif %}
     {% if a.vault_id %}<dt>Bitwarden</dt><dd>{{ 'Removed from vault' if a.vault_removed else 'Linked to vault item' }}</dd>{% endif %}
@@ -27,7 +24,7 @@
 </section>
 
 <section class="panel">
-  <h2>History</h2>
+  <h2 class="details-title">History</h2>
   {% if events %}
     <ul class="history">
       {% for e in events %}

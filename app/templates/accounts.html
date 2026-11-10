@@ -35,7 +35,7 @@
   </div>
   <div class="table-wrap">
     <table>
-      <thead><tr><th></th><th>Name</th><th>Username</th><th>Folder</th><th>Status</th><th>Last touched</th></tr></thead>
+      <thead><tr><th></th><th>Name</th><th>Username</th><th>Status</th><th>Last touched</th></tr></thead>
       <tbody>
       {% for a in rows %}
         <tr>
@@ -45,7 +45,6 @@
             {% if a.domain and a.domain != a.name|lower %}<div class="muted small">{{ a.domain }}</div>{% endif %}
           </td>
           <td class="small">{{ a.username }}</td>
-          <td class="small">{{ a.folder }}</td>
           <td><span class="badge st-{{ a.status }}">{{ STATUSES[a.status] }}</span>
             {% if a.status in CLOSED and not a.vault_removed %}<div class="muted small">still in vault</div>{% endif %}</td>
           <td class="small">{{ a.vault_updated|nicedate if a.vault_updated else '' }}</td>
