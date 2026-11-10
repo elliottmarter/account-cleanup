@@ -1,9 +1,10 @@
 :root {
-  --bg: #f6f7f9;
-  --surface: #ffffff;
+  /* Light (default). Themes: Auto follows the system light/dark setting; Light, Sepia and Dark are picked in the top bar. */
+  --bg: #e3e6ec;
+  --surface: #f4f5f8;
   --text: #1d2330;
-  --muted: #6b7385;
-  --border: #e2e5ec;
+  --muted: #5d6578;
+  --border: #cbd0db;
   --accent: #3b5bdb;
   --ok: #2b8a3e;
   --danger: #c92a2a;
@@ -13,9 +14,10 @@
   --blue: #1c7ed6;
   --purple: #7048e8;
   --grey: #868e96;
+  color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme]) {
     --bg: #14161b;
     --surface: #1d2027;
     --text: #e6e8ee;
@@ -29,7 +31,41 @@
     --blue: #4dabf7;
     --purple: #b197fc;
     --grey: #adb5bd;
+    color-scheme: dark;
   }
+}
+:root[data-theme="dark"] {
+  --bg: #14161b;
+  --surface: #1d2027;
+  --text: #e6e8ee;
+  --muted: #9198a8;
+  --border: #2e323c;
+  --accent: #748ffc;
+  --ok: #51cf66;
+  --danger: #ff6b6b;
+  --warn: #ffa94d;
+  --on-color: #14161b;
+  --blue: #4dabf7;
+  --purple: #b197fc;
+  --grey: #adb5bd;
+  color-scheme: dark;
+}
+/* Sepia: warm paper. */
+:root[data-theme="sepia"] {
+  --bg: #dccba6;
+  --surface: #eadcbb;
+  --text: #3d3125;
+  --muted: #6f5e49;
+  --border: #c4b088;
+  --accent: #9a5b1f;
+  --ok: #4a7a2c;
+  --danger: #b03a2e;
+  --warn: #c0690f;
+  --on-color: #fff9ec;
+  --blue: #35688c;
+  --purple: #77539f;
+  --grey: #8a7f6c;
+  color-scheme: light;
 }
 
 * { box-sizing: border-box; }
@@ -64,7 +100,7 @@ h3 a { color: inherit; text-decoration: none; }
 .panel.login { max-width: 22rem; margin: 4rem auto 0; padding: 1.5rem; }
 .login h1 { margin-top: 0; }
 .login-messages { max-width: 22rem; margin: 0 auto; text-align: center; }
-.pill { background: var(--accent); color: #fff; border-radius: 99px; padding: 0 .45rem; font-size: .75rem; }
+.pill { background: var(--accent); color: var(--on-color); border-radius: 99px; padding: 0 .45rem; font-size: .75rem; }
 
 main { max-width: 1040px; margin: 0 auto; padding: 0 1rem 4rem; }
 
@@ -176,7 +212,7 @@ summary { cursor: pointer; color: var(--muted); }
   background: transparent; color: var(--muted); border: 0; border-radius: 6px; cursor: pointer;
 }
 .copy-icon:hover { background: var(--border); color: var(--text); }
-.copy-icon.copied { color: #2a9d4b; }
+.copy-icon.copied { color: var(--ok); }
 
 input, select, textarea {
   font: inherit; color: var(--text); background: var(--surface);
@@ -206,3 +242,6 @@ tr:last-child td { border-bottom: none; }
 
 .notes-box label { display: block; font-weight: 600; margin-bottom: .4rem; }
 .notes-foot { display: flex; justify-content: space-between; align-items: center; gap: .5rem; margin-top: .5rem; }
+
+.topbar-right { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+.theme-picker { font-size: .85rem; padding: .25rem .4rem; }

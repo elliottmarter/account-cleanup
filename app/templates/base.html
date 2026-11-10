@@ -4,11 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Account Cleanup{% endblock %}</title>
+  <script>try { const t = localStorage.getItem("theme"); if (t) document.documentElement.dataset.theme = t; } catch (_) {}</script>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
   <header class="topbar">
     <a class="brand" href="{{ url_for('cleanup_page') }}">Account Cleanup</a>
+    <div class="topbar-right">
     {% if signed_in %}
     <nav>
       {% set ep = request.endpoint %}
@@ -19,6 +21,13 @@
       <form method="post" action="{{ url_for('logout') }}"><button class="nav-btn">Sign out</button></form>
     </nav>
     {% endif %}
+    <select id="theme" class="theme-picker" aria-label="Theme">
+      <option value="">Auto</option>
+      <option value="light">Light</option>
+      <option value="sepia">Sepia</option>
+      <option value="dark">Dark</option>
+    </select>
+    </div>
   </header>
   <main>
     {# Messages float over the page so they don't push the layout down. #}
@@ -37,6 +46,17 @@
     {% block content %}{% endblock %}
   </main>
   <script>
+    // Theme picker: remembered in this browser; "Auto" follows the system light/dark setting.
+    (() => {
+      const picker = document.getElementById("theme");
+      try { picker.value = localStorage.getItem("theme") || ""; } catch (_) {}
+      picker.addEventListener("change", () => {
+        const t = picker.value;
+        if (t) document.documentElement.dataset.theme = t; else delete document.documentElement.dataset.theme;
+        try { t ? localStorage.setItem("theme", t) : localStorage.removeItem("theme"); } catch (_) {}
+      });
+    })();
+
     // Messages: close on ×, and fade out on their own unless they're errors.
     document.querySelectorAll(".toasts .flash").forEach((toast) => {
       const close = () => { toast.classList.add("leaving"); setTimeout(() => toast.remove(), 300); };
