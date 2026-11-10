@@ -4,7 +4,7 @@
 <h1>Triage</h1>
 <p class="muted">
   Quickly sort accounts into keep or delete. Nothing gets deleted here — accounts you mark
-  "Delete" are queued and suggested on the Today page one at a time.
+  "Delete" are queued and suggested on the Cleanup page one at a time.
 </p>
 <section class="stats">
   <div class="progress-label">
@@ -37,7 +37,7 @@
 {% else %}
   <section class="empty">
     <p>Nothing left to triage. 🎉</p>
-    <a class="btn" href="{{ url_for('today_page') }}">Back to Today</a>
+    <a class="btn" href="{{ url_for('cleanup_page') }}">Back to Cleanup</a>
   </section>
 {% endif %}
 {% endblock %}

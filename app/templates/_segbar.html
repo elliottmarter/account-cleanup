@@ -1,4 +1,4 @@
-{# Expects: stats. The segmented bar of accounts by status, shared by Today and Triage. #}
+{# Expects: stats. The segmented bar of accounts by status, shared by Cleanup and Triage. #}
 <div class="segbar" role="list" aria-label="Accounts by status">
   {% for key, label, count in stats.segments %}
     <a class="seg st-{{ key }}" role="listitem" style="flex-grow: {{ count }}"

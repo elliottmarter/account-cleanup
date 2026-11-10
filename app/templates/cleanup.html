@@ -15,12 +15,12 @@
     {% include "_segbar.html" %}
   </section>
 
-  <h1>Today <span class="muted">· {{ day.strftime('%A') }} {{ day.day }} {{ day.strftime('%B') }} · <b>{{ stats.processed_today }}</b> processed today</span></h1>
+  <h1>{{ day.strftime('%A') }} {{ day.day }} {{ day.strftime('%B') }} <span class="muted">· <b>{{ stats.processed_today }}</b> processed today</span></h1>
 
   {% if pick %}
-    {% with a = pick, next_url = url_for('today_page', n=n), hide_notes = true %}{% include "_card.html" %}{% endwith %}
+    {% with a = pick, next_url = url_for('cleanup_page', n=n), hide_notes = true %}{% include "_card.html" %}{% endwith %}
     <form method="post" action="{{ url_for('save_notes', account_id=pick.id) }}" class="panel notes-box" id="notes-form">
-      <input type="hidden" name="next" value="{{ url_for('today_page', n=n) }}">
+      <input type="hidden" name="next" value="{{ url_for('cleanup_page', n=n) }}">
       <label for="notes">Notes</label>
       <textarea id="notes" name="notes" rows="4"
                 placeholder="Where things stand, e.g. emailed support 3 Nov, waiting on a reply">{{ pick.notes }}</textarea>
@@ -36,9 +36,9 @@
   {% endif %}
 
   {# Pinned to the bottom of the screen, so it never moves whatever the card's height. #}
-  <nav class="pager" aria-label="Today's accounts"><div class="pager-inner">
+  <nav class="pager" aria-label="Cleanup accounts"><div class="pager-inner">
     {% if n > 1 %}
-      <a class="btn ghost" href="{{ url_for('today_page', n=n - 1) }}">← Previous account</a>
+      <a class="btn ghost" href="{{ url_for('cleanup_page', n=n - 1) }}">← Previous account</a>
     {% else %}
       <span class="btn ghost disabled" aria-disabled="true">← Previous account</span>
     {% endif %}
@@ -53,7 +53,7 @@
     <h2>Follow up</h2>
     <p class="muted">You asked these to delete your account more than {{ follow_up_days }} days ago. Check whether it's gone.</p>
     {% for a in followups %}
-      {% with next_url = url_for('today_page') %}{% include "_card.html" %}{% endwith %}
+      {% with next_url = url_for('cleanup_page') %}{% include "_card.html" %}{% endwith %}
     {% endfor %}
   {% endif %}
 

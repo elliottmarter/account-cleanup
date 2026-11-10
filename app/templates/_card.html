@@ -1,11 +1,4 @@
 {# Expects: a (account row), next_url. Optional: hide_notes, detail (the account page's layout). #}
-{% macro status_button(key, label) -%}
-  {% if a.status == key -%}
-    <span class="btn st-{{ key }} current" title="Current status">✓ {{ label }}</span>
-  {%- else -%}
-    <button name="status" value="{{ key }}" class="btn st-{{ key }}">{{ label }}</button>
-  {%- endif %}
-{%- endmacro %}
 {% macro email_request() -%}
 <div class="email" data-account="{{ a.id }}">
   <h4>Request deletion by email</h4>
@@ -37,12 +30,10 @@ Thank you.</textarea>
         {% if a.vault_updated %}<span title="Last changed in your vault: {{ a.vault_updated|nicedate }}">last touched {{ a.vault_updated|ago }}</span>{% endif %}
       </div>
     </div>
-    {% if not detail %}<span class="badge st-{{ a.status }}">{{ STATUSES[a.status] }}</span>{% endif %}
   </div>
 
   {% if a.notes and not hide_notes %}<p class="notes">{{ a.notes }}</p>{% endif %}
 
-  {% if detail %}
     {# Account page: every status is one click away, and the current one is filled in. #}
     <form method="post" action="{{ url_for('change_status', account_id=a.id) }}">
       <input type="hidden" name="next" value="{{ next_url }}">
@@ -85,38 +76,4 @@ Thank you.</textarea>
     {% if not closed and a.status not in ("keep", "unreviewed") %}
     {{ email_request() }}
     {% endif %}
-  {% elif a.status in CLOSED %}
-    <div class="done-row">
-      <span>✓ Done{% if a.status_changed_at %} {{ a.status_changed_at|nicedate }}{% endif %}</span>
-      {% if not a.vault_removed %}
-        {% if bw_enabled and a.vault_id and not bw_unlocked() %}
-        <a class="btn small" href="{{ url_for('import_page', next=next_url) }}">🔒 Unlock vault to delete from Bitwarden</a>
-        {% elif bw_enabled and a.vault_id %}
-        <form method="post" action="{{ url_for('vault_trash', account_id=a.id) }}"
-              data-msg="Move {{ a.name }}{% if a.username %} ({{ a.username }}){% endif %} to the Bitwarden trash?"
-              onsubmit="return confirm(this.dataset.msg);">
-          <input type="hidden" name="next" value="{{ next_url }}">
-          <button class="btn small danger">Delete from Bitwarden</button>
-        </form>
-        {% endif %}
-        <form method="post" action="{{ url_for('vault_removed', account_id=a.id) }}">
-          <input type="hidden" name="next" value="{{ next_url }}">
-          <button class="btn small">I've removed it from my password manager</button>
-        </form>
-      {% else %}
-        <span class="muted">Removed from vault</span>
-      {% endif %}
-    </div>
-  {% else %}
-    <form method="post" action="{{ url_for('change_status', account_id=a.id) }}">
-      <input type="hidden" name="next" value="{{ next_url }}">
-      <div class="actions">
-        {{ status_button('deleted', 'Account deleted') }}
-        {{ status_button('gone', 'Site gone') }}
-        {{ status_button('requested', 'Deletion requested') }}
-      </div>
-    </form>
-
-    {% if a.status not in ("keep", "unreviewed") %}{{ email_request() }}{% endif %}
-  {% endif %}
 </article>

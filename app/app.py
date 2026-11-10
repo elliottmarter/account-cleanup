@@ -74,7 +74,7 @@ def now_iso():
     return now().isoformat(timespec="seconds")
 
 
-# "Deletion requested" accounts resurface on Today after this many days.
+# "Deletion requested" accounts resurface on Cleanup after this many days.
 FOLLOW_UP_DAYS = 14
 
 
@@ -127,7 +127,7 @@ def require_auth():
 @app.get("/login")
 def login():
     if signed_in():
-        return redirect(safe_next(url_for("today_page")))
+        return redirect(safe_next(url_for("cleanup_page")))
     return render_template("login.html", next=safe_next(""))
 
 
@@ -146,7 +146,7 @@ def login_submit():
     session.clear()
     session["auth"] = login_token()
     session.permanent = True
-    return redirect(safe_next(url_for("today_page")))
+    return redirect(safe_next(url_for("cleanup_page")))
 
 
 @app.post("/logout")
@@ -316,7 +316,7 @@ def healthz():
 
 
 @app.get("/")
-def today_page():
+def cleanup_page():
     conn = db.get_db()
     cutoff = (now() - timedelta(days=FOLLOW_UP_DAYS)).isoformat(timespec="seconds")
     followups = conn.execute(
@@ -331,7 +331,7 @@ def today_page():
     n = request.args.get("n", type=int) or len(picks)
     n = max(1, min(n, len(picks))) if picks else 0
     return render_template(
-        "today.html",
+        "cleanup.html",
         pick=picks[n - 1] if picks else None,
         n=n,
         # Total to work through: today's suggestions so far plus everything still waiting.
@@ -344,7 +344,7 @@ def today_page():
     )
 
 
-@app.post("/today/another")
+@app.post("/cleanup/another")
 def another_pick():
     """Next account: step forward through today's suggestions, adding a new one at the end."""
     conn = db.get_db()
@@ -352,12 +352,12 @@ def another_pick():
     count = conn.execute("SELECT COUNT(*) FROM daily_picks WHERE day = ?", (day,)).fetchone()[0]
     n = request.form.get("n", type=int) or count
     if n < count:
-        return redirect(url_for("today_page", n=n + 1))
+        return redirect(url_for("cleanup_page", n=n + 1))
     if add_pick(conn, day) is None:
         flash("Nothing left to suggest - everything is reviewed, queued or snoozed.", "info")
-        return redirect(url_for("today_page", n=n))
+        return redirect(url_for("cleanup_page", n=n))
     conn.commit()
-    return redirect(url_for("today_page", n=count + 1))
+    return redirect(url_for("cleanup_page", n=count + 1))
 
 
 @app.get("/triage")
@@ -440,12 +440,12 @@ def change_status(account_id):
     status = request.form.get("status", "")
     set_status(conn, account_id, status)
     conn.commit()
-    return redirect(safe_next(url_for("today_page")))
+    return redirect(safe_next(url_for("cleanup_page")))
 
 
 @app.post("/account/<int:account_id>/notes")
 def save_notes(account_id):
-    """Notes box under the Today card. Saved in the background before moving on, or with its Save button."""
+    """Notes box under the Cleanup card. Saved in the background before moving on, or with its Save button."""
     conn = db.get_db()
     get_account(conn, account_id)
     conn.execute(
@@ -454,7 +454,7 @@ def save_notes(account_id):
     conn.commit()
     if request.headers.get("X-Requested-With") == "fetch":
         return "", 204
-    return redirect(safe_next(url_for("today_page")))
+    return redirect(safe_next(url_for("cleanup_page")))
 
 
 @app.post("/account/<int:account_id>/snooze")
@@ -471,7 +471,7 @@ def snooze(account_id):
     if removed:
         add_pick(conn, day)  # swap in a replacement for today's suggestion
     conn.commit()
-    return redirect(safe_next(url_for("today_page")))
+    return redirect(safe_next(url_for("cleanup_page")))
 
 
 @app.post("/account/<int:account_id>/vault")
@@ -482,7 +482,7 @@ def vault_removed(account_id):
     removed = 0 if request.form.get("removed") == "0" else 1
     conn.execute("UPDATE accounts SET vault_removed = ? WHERE id = ?", (removed, account_id))
     conn.commit()
-    return redirect(safe_next(url_for("today_page")))
+    return redirect(safe_next(url_for("cleanup_page")))
 
 
 @app.post("/account/<int:account_id>/remove")
@@ -646,7 +646,7 @@ def import_upload():
         " You can now delete the export file.",
         "success",
     )
-    return redirect(url_for("today_page"))
+    return redirect(url_for("cleanup_page"))
 
 
 @app.get("/export.csv")

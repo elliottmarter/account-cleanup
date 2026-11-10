@@ -10,7 +10,7 @@
 A small self-hosted web app for working through your old online accounts and
 deleting the ones you no longer need — a little at a time.
 
-![Today: one suggested account at a time, with the status bar above](docs/screenshots/today.png)
+![Cleanup: one suggested account at a time, with the status bar above](docs/screenshots/cleanup.png)
 
 1. **Import** a Bitwarden export (`.json` or `.csv`; other password managers' CSVs work too).
    Only names, URLs, usernames, folders and dates are kept — passwords, 2FA seeds and notes are discarded.
@@ -19,11 +19,11 @@ deleting the ones you no longer need — a little at a time.
    **Or sync straight from Bitwarden** with an API key, and delete logins from your vault from inside the
    app (see [Bitwarden sync](#bitwarden-sync-optional)).
 2. **Triage** (optional): rapid-fire Keep / Delete / Not sure, with keyboard shortcuts `K` `D` `S`.
-3. **Today**: the app suggests one account at a time. Do as many or as few as you like: click
+3. **Cleanup**: the app suggests one account at a time. Do as many or as few as you like: click
    **Next account** for another. Accounts you queued for deletion
    come first, then unreviewed ones — oldest-touched first, since those are most likely forgotten.
-   Each card has a link to the site, a GDPR erasure email template and buttons for
-   **Account deleted** / **Site gone** / **Deletion requested**.
+   Each card links to the site, shows every status as a button, and includes a GDPR erasure
+   email template (subject and body, each with a copy button) for accounts you're deleting.
 4. **Track** each account as *To review → To delete → Deletion requested → Deleted* (or *Keeping* / *Site gone*).
    Requests older than 14 days resurface as follow-ups, and deleted accounts remind you to remove them
    from your password manager.
@@ -83,7 +83,7 @@ Version tags such as `:1.0.0` are published for tagged releases, if you'd rather
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `TZ` | `UTC` | Time zone used to decide when "today" changes |
+| `TZ` | `UTC` | Time zone used to decide when the day changes (the "processed today" count resets) |
 | `APP_USERNAME` | **required** | Username for the web UI login |
 | `APP_PASSWORD` | **required** | Password for the web UI login. The container won't start without both |
 | `BW_CLIENTID` / `BW_CLIENTSECRET` | *(unset)* | Bitwarden personal API key; turns on [Bitwarden sync](#bitwarden-sync-optional) |
